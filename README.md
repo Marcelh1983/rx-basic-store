@@ -10,7 +10,7 @@ are inspired by [ngxs](https://www.ngxs.io)
 
 ## Examples
 
-Here a [demo](https://rx-basic-store.web.app/) and the code [code](https://github.com/Marcelh1983/rx-basic-store/tree/main/apps/example) 
+Here a [demo](https://rx-basic-store.web.app/) and the [code](https://github.com/Marcelh1983/rx-basic-store/tree/main/apps/example) 
 
 ### create
 ```typescript
