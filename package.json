@@ -1,13 +1,30 @@
 {
   "name": "rx-basic-store",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "license": "MIT",
+  "author": {
+    "name": "Marcel Hoekstra"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Marcelh1983/rx-basic-store.git"
+  },
+  "keywords": [
+    "Store",
+    "RxJs",
+    "React"
+  ],
+  "bugs": {
+    "url": "https://github.com/Marcelh1983/rx-basic-store/issues"
+  },
+  "homepage": "https://github.com/Marcelh1983/rx-basic-store",
   "scripts": {
     "nx": "nx",
     "start": "nx serve",
     "build": "nx build",
+    "deploy:example": "firebase deploy",
     "test": "nx test",
-    "build:lib": "rollup -c --dir ./dist && npm publish ./dist --tag latest",
+    "publish:lib": "rollup -c --dir ./dist/lib && npm publish ./dist/lib --tag latest",
     "lint": "nx workspace-lint && nx lint",
     "affected:apps": "nx affected:apps",
     "affected:libs": "nx affected:libs",
@@ -24,7 +41,6 @@
     "dep-graph": "nx dep-graph",
     "help": "nx help"
   },
-  "private": true,
   "dependencies": {
     "core-js": "^3.6.5",
     "document-register-element": "1.13.1",
