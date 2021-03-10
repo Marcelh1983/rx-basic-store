@@ -3,7 +3,7 @@ import { BehaviorSubject } from 'rxjs';
 export interface StoreAction<M, T> {
     type: string;
     payload?: T;
-    execute(subject: StateContext<M>): void | Promise<M>;
+    execute(subject: StateContext<M>): | Promise<M>;
 }
 
 const storeContext = new Map<string, unknown>(); 

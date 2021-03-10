@@ -51,7 +51,7 @@ export class LoadAction implements StoreAction<StateModel, never> {
 Store:
 - constructor: (initialState: T = The initial state, devTools: boolean = connect to redux devTools)
 - callback: (action: StoreAction<T, unknown>) => void = () => { } can be used capture all actions. For example to log all actions to the console or database.
-- dispatch: (action: StoreAction<T, unknown>) => Promise<void | T>: dispatches an action and return a promise, optional with the state, when the action is finished.
+- dispatch: (action: StoreAction<T, unknown>) => Promise<T>: dispatches an action and return a promise with the new state
 - currentState: returns the current state.
 
 ctx: StateContext<StateModel>
