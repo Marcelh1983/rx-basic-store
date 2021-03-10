@@ -1,6 +1,6 @@
 {
   "name": "rx-basic-store",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "license": "MIT",
   "author": {
     "name": "Marcel Hoekstra"
@@ -24,7 +24,8 @@
     "build": "nx build",
     "deploy:example": "firebase deploy",
     "test": "nx test",
-    "publish:lib": "rollup -c --dir ./dist/lib && npm publish ./dist/lib --tag latest",
+    "build:lib": "rollup -c --dir ./dist/lib",
+    "publish:lib": "npm run build:lib && npm publish ./dist/lib --tag latest",
     "lint": "nx workspace-lint && nx lint",
     "affected:apps": "nx affected:apps",
     "affected:libs": "nx affected:libs",
