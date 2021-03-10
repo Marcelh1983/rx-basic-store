@@ -46,3 +46,17 @@ export class LoadAction implements StoreAction<StateModel, never> {
     }
 }
 ```
+### API
+
+Store:
+- initialState: T: The initial state
+- context (name: string, dependency: unknown }[]): can be used to inject context like: History etc. these context dependencies can be accessed by ctx: ctx.getContext<History<unknown>>('history')
+- actionCallback: (action: StoreAction<T, unknown>) => void = () => { }, devTools = false) can be used capture all action. For example to log all actions to the console or database.
+- devTools (bool): indicates if the events should be send to redux devTools
+
+ctx: StateContext<StateModel>
+- getContext<T2>(name: string): gets the context that is added while creating the store. E.g. use to access History
+- dispatch: (action: StoreAction<T, unknown>) => Promise<void | T>: dispatches an action and return a promise, optional with the state, when the action is finished.
+- getState: gets the current state.
+- setState: set the entire new state.
+- patchState: set only the changed properties of the state, these will be merged with the current state.

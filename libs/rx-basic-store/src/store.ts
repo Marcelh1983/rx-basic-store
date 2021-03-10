@@ -4,13 +4,23 @@ export interface StoreAction<M, T> {
     type: string;
     payload?: T;
 
-    customProperties?: Array<{ key: string, value: string }>;
     execute(subject: StateContext<M>): void | Promise<M>;
 }
 
 export class StateContext<T> {
-    constructor(public subject: BehaviorSubject<T>) { }
-
+    private context = new Map<string, any>();
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    constructor(public subject: BehaviorSubject<T>, context: { name: string, dependency: unknown }[] = []) {
+        context.forEach(c => {
+            if (this.context.get(c.name)) {
+                console.warn(`${c.name} is already added in the store context. Overriding current value`);
+            }
+            this.context.set(c.name, c.dependency);
+        })
+    }
+    getContext<T2>(name: string) {
+        return this.context.get(name) as T2;
+    }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     dispatch: (action: StoreAction<T, unknown>) => Promise<void | T>;
 
@@ -29,10 +39,10 @@ export class StateContext<T> {
     }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-function
-export function createStore<T>(initialState: T, actionCallback: (action: StoreAction<T, unknown>) => void = () => { }, devTools = false) {
+// eslint-disable-next-line 
+export function createStore<T>(initialState: T, context: { name: string, dependency: unknown }[] = [], actionCallback: (action: StoreAction<T, unknown>) => void = () => { }, devTools = false) {
     const subject = new BehaviorSubject<T>(initialState);
-    const ctx = new StateContext(subject);
+    const ctx = new StateContext(subject, context);
     let devToolsDispacher = null;
     if (devTools) {
         devToolsDispacher = getDevToolsDispatcher(subject.getValue());
