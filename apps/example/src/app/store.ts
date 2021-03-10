@@ -52,5 +52,5 @@ export class ClearFilterAction implements StoreAction<StateModel, never> {
     }
 }
 
-const store = createStore<StateModel>(initialState, [], null, true);
+const store = createStore<StateModel>(initialState, true);
 export default store;
