@@ -56,7 +56,7 @@ Store:
 
 ctx: StateContext<StateModel>
 - getContext<T2>(name: string): gets the context that is added while creating the store. E.g. use to access History *
-- dispatch: (action: StoreAction<T, unknown>) => Promise<void | T>: dispatches an action and return a promise, optional with the state, when the action is finished.
+- dispatch: (action: StoreAction<T, unknown>) => Promise<T>: dispatches an action and return a promise with the new state
 - getState: gets the current state.
 - setState: set the entire new state.
 - patchState: set only the changed properties of the state, these will be merged with the current state.

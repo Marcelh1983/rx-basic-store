@@ -25,7 +25,7 @@ export class StateContext<T> {
         return storeContext.get(name) as T2;
     }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    dispatch: (action: StoreAction<T, unknown>) => Promise<void | T>;
+    dispatch: (action: StoreAction<T, unknown>) => Promise<T>;
 
     getState = () => this.subject.getValue();
 
