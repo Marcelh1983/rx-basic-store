@@ -15,7 +15,7 @@ Here a [demo](https://rx-basic-store.web.app/) and the [code](https://github.com
 ### create
 ```typescript
 // creates a new store
-const store = createStore<StateModel>(initialState, null, true);
+const store = createStore<ActivityStateModel>(initialState, !environment.production);
 ```
 In reactJs the store can be mapped to the component state like this:
 
