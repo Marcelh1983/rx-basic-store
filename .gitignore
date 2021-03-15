@@ -38,3 +38,6 @@ testem.log
 .DS_Store
 Thumbs.db
 .firebase/*.cache
+types/*
+index.js
+index.js.map

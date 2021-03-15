@@ -1,15 +1,19 @@
 {
-  "extends": "./tsconfig.json",
   "compilerOptions": {
-    "declarationDir": "../../dist/types",
-    "outDir": "../../dist",
-    "rootDir": "./src",
-    "types": []
-  },
+    "target": "es5",                          
+    "module": "esnext",
+    "declaration": true,
+    "moduleResolution": "node",                     
+    "noEmitOnError": true,
+    "lib": ["es2017","DOM"],                            
+    "strict": true,  
+    "esModuleInterop": false,                 
+    "outDir": "../../dist/lib",
+    "declarationDir": "",
+    "rootDir": "src"
+  }
+  ,
   "include": [
     "**/*.ts"
   ],
-  "exclude": [
-    "**/*.spec.ts"
-  ]
 }

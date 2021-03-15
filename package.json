@@ -1,6 +1,6 @@
 {
   "name": "rx-basic-store",
-  "version": "0.0.8",
+  "version": "0.1.4",
   "license": "MIT",
   "author": {
     "name": "Marcel Hoekstra"
@@ -14,6 +14,8 @@
     "RxJs",
     "React"
   ],
+  "main": "index.js",
+  "types": "index.d.ts",
   "bugs": {
     "url": "https://github.com/Marcelh1983/rx-basic-store/issues"
   },
@@ -24,7 +26,7 @@
     "build": "nx build",
     "deploy:example": "firebase deploy",
     "test": "nx test",
-    "build:lib": "rollup -c --dir ./dist/lib",
+    "build:lib": "rimraf dist/lib && rollup -c",
     "publish:lib": "npm run build:lib && npm publish ./dist/lib --tag latest",
     "lint": "nx workspace-lint && nx lint",
     "affected:apps": "nx affected:apps",
@@ -45,8 +47,7 @@
   "dependencies": {
     "core-js": "^3.6.5",
     "react": "17.0.1",
-    "react-dom": "17.0.1",
-    "tslib": "^2.0.0"
+    "react-dom": "17.0.1"
   },
   "peerDependencies": {
     "rxjs": ">= 6.0.0"
@@ -65,6 +66,7 @@
     "@nrwl/web": "11.4.0",
     "@nrwl/workspace": "11.4.0",
     "@rollup/plugin-commonjs": "^17.1.0",
+    "@rollup/plugin-typescript": "^8.2.0",
     "@rollup/plugin-node-resolve": "^11.2.0",
     "@types/node": "12.12.38",
     "@types/react": "16.9.56",
@@ -80,12 +82,14 @@
     "eslint-plugin-react": "7.21.5",
     "eslint-plugin-react-hooks": "4.2.0",
     "prettier": "2.2.1",
-    "rollup": "2.41.0",
+    "rimraf": "^3.0.2",
+    "rollup": "^2.41.2",
     "rollup-plugin-sourcemaps": "0.6.3",
     "rollup-plugin-peer-deps-external": "^2.2.4",
     "rollup-plugin-typescript2": "^0.30.0",
     "rollup-plugin-copy": "3.4.0",
     "ts-node": "~9.1.1",
-    "typescript": "~4.0.3"
+    "tslib": "^2.1.0",
+    "typescript": "^4.0.7"
   }
 }
