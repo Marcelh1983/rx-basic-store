@@ -1,6 +1,6 @@
 {
   "name": "rx-basic-store",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "license": "MIT",
   "author": {
     "name": "Marcel Hoekstra"
@@ -29,13 +29,6 @@
     "build:lib": "rimraf dist/lib && rollup -c",
     "publish:lib": "npm run build:lib && npm publish ./dist/lib --tag latest",
     "lint": "nx workspace-lint && nx lint",
-    "affected:apps": "nx affected:apps",
-    "affected:libs": "nx affected:libs",
-    "affected:build": "nx affected:build",
-    "affected:test": "nx affected:test",
-    "affected:lint": "nx affected:lint",
-    "affected:dep-graph": "nx affected:dep-graph",
-    "affected": "nx affected",
     "format": "nx format:write",
     "format:write": "nx format:write",
     "format:check": "nx format:check",
@@ -53,10 +46,6 @@
     "rxjs": ">= 6.0.0"
   },
   "devDependencies": {
-    "@babel/core": "7.9.6",
-    "@babel/preset-env": "7.9.6",
-    "@babel/preset-react": "7.9.4",
-    "@babel/preset-typescript": "7.9.0",
     "@nrwl/cli": "11.4.0",
     "@nrwl/cypress": "11.4.0",
     "@nrwl/eslint-plugin-nx": "11.4.0",

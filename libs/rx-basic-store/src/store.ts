@@ -2,10 +2,10 @@ import { BehaviorSubject, PartialObserver, Subscription } from 'rxjs';
 
 export interface Store<T> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    subscribe: (setState: any) => Subscription ;
+    subscribe: (setState: any) => Subscription;
     dispatch: (action: StoreAction<T, unknown>) => Promise<T>;
     currentState: () => T;
-    callback: (callbackFunction: (action: StoreAction<T, unknown>) => void) => (action: StoreAction<T, unknown>) => void
+    callback?: (action: StoreAction<T, unknown>) => void
 }
 
 export interface StoreAction<M, T> {
@@ -34,7 +34,7 @@ export class StateContext<T> {
     }
     // eslint-disable-next-line  
     dispatch = (action: StoreAction<T, unknown>) => action.execute(this);
-    
+
     getState = () => this.subject.getValue();
 
     setState(state: T) {
@@ -54,18 +54,17 @@ export function createStore<T>(initialState: T, devTools = false): Store<T> {
     const subject = new BehaviorSubject<T>(initialState);
     const ctx = new StateContext(subject);
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    let actionCallback: (action: StoreAction<T, unknown>) => void = () => { };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let devToolsDispacher: any = null;
     if (devTools) {
         devToolsDispacher = getDevToolsDispatcher(subject.getValue());
     }
 
-    const store = {
+    const store: Store<T> = {
         subscribe: (setState: PartialObserver<T> | undefined) => subject.subscribe(setState),
         dispatch: async (action: StoreAction<T, unknown>) => {
-            if (actionCallback) {
-                actionCallback(JSON.parse(JSON.stringify(action)) as StoreAction<T, unknown>);
+            if (store.callback) {
+                store.callback(JSON.parse(JSON.stringify(action)) as StoreAction<T, unknown>);
             }
             if (devTools && devToolsDispacher) {
                 const newState = await action.execute(ctx);
@@ -76,7 +75,7 @@ export function createStore<T>(initialState: T, devTools = false): Store<T> {
             }
         },
         currentState: () => subject.getValue(),
-        callback: (callbackFunction: (action: StoreAction<T, unknown>) => void) => actionCallback = callbackFunction
+        callback: undefined
     }
     ctx.dispatch = store.dispatch;
     return store;

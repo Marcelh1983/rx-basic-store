@@ -40,7 +40,7 @@ export class LoadAction implements StoreAction<StateModel, never> {
     async execute(ctx: StateContext<StateModel>): Promise<StateModel> {
         if (ctx.getState().users.length === 0) {
             ctx.patchState({ loading: true });
-            const users = await (await axios.get<ApiResponse>('https://randomuser.me/api/?results=20')).data.results;
+            const users = (await axios.get<ApiResponse>('https://randomuser.me/api/?results=20')).data.results;
             return ctx.patchState({ loading: false, users });
         }
     }

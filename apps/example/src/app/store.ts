@@ -2,6 +2,7 @@
 import axios from 'axios';
 import { ApiResponse, User } from './model';
 import { createStore, StateContext, StoreAction } from 'rx-basic-store';
+import { environment } from '../environments/environment';
 
 export type genderType = 'none' | 'female' | 'male' | 'other';
 export interface StateModel {
@@ -22,7 +23,7 @@ export class LoadAction implements StoreAction<StateModel, never> {
     async execute(ctx: StateContext<StateModel>): Promise<StateModel> {
         if (ctx.getState().users.length === 0) {
             ctx.patchState({ loading: true });
-            const users = await (await axios.get<ApiResponse>('https://randomuser.me/api/?results=20')).data.results;
+            const users = (await axios.get<ApiResponse>('https://randomuser.me/api/?results=20')).data.results;
             return ctx.patchState({ loading: false, users });
         }
     }
@@ -53,4 +54,14 @@ export class ClearFilterAction implements StoreAction<StateModel, never> {
 }
 
 const store = createStore<StateModel>(initialState, true);
+
+function callback(action: StoreAction<StateModel, unknown>) {
+    if (environment.production) {
+        // log action to database
+    } else {
+        localStorage.setItem('state', JSON.stringify(action));
+    }
+}
+store.callback = callback;
+
 export default store;
