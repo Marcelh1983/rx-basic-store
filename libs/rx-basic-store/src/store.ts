@@ -5,7 +5,7 @@ export interface Store<T> {
     subscribe: (setState: any) => Subscription;
     dispatch: (action: StoreAction<T, unknown>) => Promise<T>;
     currentState: () => T;
-    callback?: (action: StoreAction<T, unknown>) => void
+    callback?: (action: StoreAction<T, unknown>, oldState: T, newState: T) => void
 }
 
 export interface StoreAction<M, T> {
@@ -63,16 +63,15 @@ export function createStore<T>(initialState: T, devTools = false): Store<T> {
     const store: Store<T> = {
         subscribe: (setState: PartialObserver<T> | undefined) => subject.subscribe(setState),
         dispatch: async (action: StoreAction<T, unknown>) => {
-            if (store.callback) {
-                store.callback(JSON.parse(JSON.stringify(action)) as StoreAction<T, unknown>);
-            }
+            const newState = await action.execute(ctx);
             if (devTools && devToolsDispacher) {
-                const newState = await action.execute(ctx);
                 devToolsDispacher(action, newState);
-                return newState;
-            } else {
-                return action.execute(ctx);
             }
+            if (store.callback) {
+                store.callback(JSON.parse(JSON.stringify(action)) as StoreAction<T, unknown>, ctx.getState(), newState);
+            }
+            return newState;
+
         },
         currentState: () => subject.getValue(),
         callback: undefined
