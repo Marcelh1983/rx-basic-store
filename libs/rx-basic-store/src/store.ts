@@ -5,7 +5,7 @@ export interface Store<T> {
     subscribe: (setState: any) => Subscription;
     dispatch: (action: StoreAction<T, unknown>) => Promise<T>;
     currentState: () => T;
-    callback?: (action: StoreAction<T, unknown>, oldState: T, newState: T) => void
+    callback?: (action: StoreAction<T, unknown>, oldState: T, newState: T, context: Map<string, unknown>) => void
 }
 
 export interface StoreAction<M, T> {
@@ -68,7 +68,7 @@ export function createStore<T>(initialState: T, devTools = false): Store<T> {
                 devToolsDispacher(action, newState);
             }
             if (store.callback) {
-                store.callback(JSON.parse(JSON.stringify(action)) as StoreAction<T, unknown>, ctx.getState(), newState);
+                store.callback(JSON.parse(JSON.stringify(action)) as StoreAction<T, unknown>, ctx.getState(), newState, storeContext);
             }
             return newState;
 
