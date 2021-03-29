@@ -7,7 +7,7 @@ export function App() {
   useEffect(() => {
     const subs = store.subscribe(setState);
     store.dispatch(new LoadAction());
-    return () => subs.unsubscribe();
+    return subs.unsubscribe;
   }, []);
 
   const normal =

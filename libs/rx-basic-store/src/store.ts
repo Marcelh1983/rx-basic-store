@@ -1,8 +1,9 @@
-import { BehaviorSubject, PartialObserver, Subscription } from 'rxjs';
+import { BehaviorSubject, Observable, Subscription } from 'rxjs';
 
 export interface Store<T> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    subscribe: (setState: any) => Subscription;
+    subscribe: (setState:((state:T) => void)) => Subscription;
+    asObservable: Observable<T>;
     dispatch: (action: StoreAction<T, unknown>) => Promise<T>;
     currentState: () => T;
     callback?: (action: StoreAction<T, unknown>, oldState: T, newState: T, context: Map<string, unknown>) => void
@@ -52,6 +53,7 @@ export class StateContext<T> {
 
 export function createStore<T>(initialState: T, devTools = false): Store<T> {
     const subject = new BehaviorSubject<T>(initialState);
+
     const ctx = new StateContext(subject);
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -61,7 +63,8 @@ export function createStore<T>(initialState: T, devTools = false): Store<T> {
     }
 
     const store: Store<T> = {
-        subscribe: (setState: PartialObserver<T> | undefined) => subject.subscribe(setState),
+        subscribe: (setState) => subject.subscribe(setState),
+        asObservable: subject.asObservable(),
         dispatch: async (action: StoreAction<T, unknown>) => {
             const newState = await action.execute(ctx);
             if (devTools && devToolsDispacher) {

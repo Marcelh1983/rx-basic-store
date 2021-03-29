@@ -26,7 +26,7 @@ export function MyComponent() {
   useEffect(() => {
     const subs = store.subscribe(setState);
     store.dispatch(new LoadAction());
-    return () => subs.unsubscribe();
+    return subs.unsubscribe;
   }, []);
 ```
 
@@ -53,6 +53,7 @@ Store:
 - callback: (action: StoreAction<T, unknown>, oldState: T, newState: T, storeContext: Map<string, unknown>) => void  can be used capture all actions. For example to log all actions to the console or database.
 - dispatch: (action: StoreAction<T, unknown>) => Promise<T>: dispatches an action and return a promise with the new state
 - currentState: returns the current state.
+- asObservable: return an observable of T
 
 ctx: StateContext<StateModel>
 - getContext<T2>(name: string): gets the context that is added while creating the store. E.g. use to access History *
