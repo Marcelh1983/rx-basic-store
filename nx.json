@@ -17,6 +17,7 @@
   },
   "projects": {
     "example": { "tags": [] },
-    "rx-basic-store": { "tags": [] }
+    "rx-basic-store": { "tags": [] },
+    "rx-firebase-store": { "tags": [] }
   }
 }

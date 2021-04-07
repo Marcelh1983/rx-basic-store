@@ -98,6 +98,25 @@
           }
         }
       }
+    },
+    "rx-firebase-store": {
+      "root": "libs/rx-firebase-store",
+      "sourceRoot": "libs/rrx-firebase-store/src",
+      "projectType": "library",
+      "targets": {
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": { "lintFilePatterns": ["libs/rx-firebase-store/**/*.ts"] }
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": ["coverage/libs/rx-firebase-store"],
+          "options": {
+            "jestConfig": "libs/rx-firebase-store/jest.config.js",
+            "passWithNoTests": true
+          }
+        }
+      }
     }
   }
 }

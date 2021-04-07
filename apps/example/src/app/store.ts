@@ -62,6 +62,6 @@ function callback(action: StoreAction<StateModel, unknown>) {
         localStorage.setItem('state', JSON.stringify(action));
     }
 }
-store.callback = callback;
+store.addCallback(callback);
 
 export default store;

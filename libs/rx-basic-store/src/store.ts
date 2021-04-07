@@ -1,19 +1,36 @@
 import { BehaviorSubject, Observable, Subscription } from 'rxjs';
 
-export interface Store<T> {
+// ABSTRACT TYPES
+
+export interface StoreBaseType<StateType, ActionType extends StoreActionType<StateType, unknown>> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    subscribe: (setState:((state:T) => void)) => Subscription;
-    asObservable: Observable<T>;
-    dispatch: (action: StoreAction<T, unknown>) => Promise<T>;
-    currentState: () => T;
-    callback?: (action: StoreAction<T, unknown>, oldState: T, newState: T, context: Map<string, unknown>) => void
+    subscribe: (setState: ((state: StateType) => void)) => Subscription;
+    asObservable: Observable<StateType>;
+    dispatch: (action: ActionType) => Promise<StateType>;
+    currentState: () => StateType;
+    addCallback: (callback: (action: ActionType, oldState: StateType, newState: StateType, context: Map<string, unknown>) => void) => void
 }
 
-export interface StoreAction<M, T> {
+export interface StoreActionBaseType<StateType, PayloadType, ContextType extends StateContextType<StateType, StoreActionBaseType>> {
     type: string;
-    payload?: T;
-    execute(subject: StateContext<M>): | Promise<M>;
+    payload?: PayloadType;
+    execute: (ctx: ContextType) => Promise<StateType>;
 }
+
+export interface StateContextType<StateType, ActionType> {
+    getContext: <ContextType> (name: string) => ContextType;
+    dispatch: (action: ActionType) => Promise<StateType>;
+    getState: () => StateType;
+    setState: (state: StateType) => Promise<StateType>;
+    patchState: (state: Partial<StateType>) => Promise<StateType>;
+}
+
+// BASIS STORE TYPES
+
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface StoreActionType<StateType, PayloadType> extends StoreActionBaseType<StateType,PayloadType, StateContext<StateType>> { }
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface StoreType<T> extends StoreBaseType<T, StoreActionType<T, unknown>> { }
 
 const storeContext = new Map<string, unknown>();
 
@@ -26,41 +43,41 @@ export const setStoreContext = (context: { name: string, dependency: unknown }[]
     });
 };
 
-export class StateContext<T> {
+export class StateContext<StateType, PayloadType> implements StateContextType<StateType, PayloadType>  {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    constructor(public subject: BehaviorSubject<T>) { }
-
+    constructor(public subject: BehaviorSubject<StateType>) { }
+    dispatch: (action: PayloadType) => Promise<StateType>;
+    dispatch = (action: StoreAction<StateType, unknown>) => action.execute(this);
     getContext<T2>(name: string) {
         return storeContext.get(name) as T2;
     }
     // eslint-disable-next-line  
-    dispatch = (action: StoreAction<T, unknown>) => action.execute(this);
+
 
     getState = () => this.subject.getValue();
 
-    setState(state: T) {
+    setState = (state: StateType) => {
         const updatedState = { ...state };
         this.subject.next(updatedState);
         return Promise.resolve(updatedState);
     }
-    patchState(state: Partial<T>) {
+    patchState = (state: Partial<StateType>) => {
         const current = this.subject.getValue();
-        const merged = { ...current, ...state } as T;
+        const merged = { ...current, ...state } as StateType;
         this.subject.next(merged);
         return Promise.resolve(merged);
     }
 }
 
-export function createStore<T>(initialState: T, devTools = false): Store<T> {
+export function createStore<T>(initialState: T, devTools = false, context?: StateContext<T>): Store<T> {
     const subject = new BehaviorSubject<T>(initialState);
-
-    const ctx = new StateContext(subject);
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    const ctx = context ? context : new StateContext(subject);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let devToolsDispacher: any = null;
     if (devTools) {
         devToolsDispacher = getDevToolsDispatcher(subject.getValue());
     }
+    const callbacks: ((action: StoreAction<T, unknown>, oldState: T, newState: T, context: Map<string, unknown>) => void)[] = [];
 
     const store: Store<T> = {
         subscribe: (setState) => subject.subscribe(setState),
@@ -70,14 +87,17 @@ export function createStore<T>(initialState: T, devTools = false): Store<T> {
             if (devTools && devToolsDispacher) {
                 devToolsDispacher(action, newState);
             }
-            if (store.callback) {
-                store.callback(JSON.parse(JSON.stringify(action)) as StoreAction<T, unknown>, ctx.getState(), newState, storeContext);
+            for (const callback of callbacks) {
+                callback(JSON.parse(JSON.stringify(action)) as StoreAction<T, unknown>, ctx.getState(), newState, storeContext);
             }
             return newState;
 
         },
         currentState: () => subject.getValue(),
-        callback: undefined
+        addCallback: (callback: (action: StoreAction<T, unknown>, oldState: T, newState: T, context: Map<string, unknown>) => void) => {
+            callbacks.push(callback);
+        }
+
     }
     ctx.dispatch = store.dispatch;
     return store;

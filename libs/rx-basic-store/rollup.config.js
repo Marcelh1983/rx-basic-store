@@ -7,7 +7,7 @@ import copy from 'rollup-plugin-copy';
 import packageJson from './package.json';
 
 export default {
-  input: './libs/rx-basic-store/src/index.ts',
+  input: './src/index.ts',
   output: [
     {
       file: packageJson.main,
@@ -19,19 +19,19 @@ export default {
       format: 'esm',
       sourcemap: true,
     },
+    {
+      file: '../../dist/lib/index.js',
+    },
   ],
-  output: {
-    file: './dist/lib/index.js',
-},
   plugins: [
     peerDepsExternal(),
     resolve(),
     commonjs(),
     typescript({
-      tsconfig: './libs/rx-basic-store/tsconfig.lib.json'
+      tsconfig: './tsconfig.lib.json',
     }),
     copy({
-      targets: [{ src: ['./package.json', './README.md'], dest: 'dist/lib' }],
+      targets: [{ src: ['./package.json', './README.md'], dest: '../../dist/lib/rx-basic-store' }],
     }),
   ],
 };
