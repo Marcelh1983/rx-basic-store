@@ -4,34 +4,26 @@ import resolve from '@rollup/plugin-node-resolve';
 import peerDepsExternal from 'rollup-plugin-peer-deps-external';
 import typescript from '@rollup/plugin-typescript';
 import copy from 'rollup-plugin-copy';
-import packageJson from './package.json';
-
+// import sourcemaps from 'rollup-plugin-sourcemaps';
 export default {
-  input: './src/index.ts',
-  output: [
-    {
-      file: packageJson.main,
-      format: 'cjs',
-      sourcemap: true,
-    },
-    {
-      file: packageJson.module,
-      format: 'esm',
-      sourcemap: true,
-    },
-    {
-      file: '../../dist/lib/index.js',
-    },
-  ],
+  input: './libs/rx-basic-store/src/index.ts',
+
+  // eslint-disable-next-line no-dupe-keys
+  output: {
+    file: './dist/libs/rx-basic-store/index.js',
+    sourcemap: true,
+    
+  },
   plugins: [
     peerDepsExternal(),
     resolve(),
     commonjs(),
     typescript({
-      tsconfig: './tsconfig.lib.json',
+      tsconfig: './libs/rx-basic-store/tsconfig.lib.prod.json',
     }),
     copy({
-      targets: [{ src: ['./package.json', './README.md'], dest: '../../dist/lib/rx-basic-store' }],
+      targets: [{ src: ['./libs/rx-basic-store/package.json', './libs/rx-basic-store/README.md'], dest: './dist/libs/rx-basic-store' }],
     }),
+    // sourcemaps()
   ],
 };

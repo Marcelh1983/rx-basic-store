@@ -1,8 +1,7 @@
 
 import axios from 'axios';
 import { ApiResponse, User } from './model';
-import { createStore, StateContext, StoreAction } from 'rx-basic-store';
-import { environment } from '../environments/environment';
+import { createStore, FirebaseActionType, FirebaseStateContextType } from 'rx-firebase-store';
 
 export type genderType = 'none' | 'female' | 'male' | 'other';
 export interface StateModel {
@@ -18,9 +17,10 @@ const initialState: StateModel = {
     filter: (u) => true
 };
 
-export class LoadAction implements StoreAction<StateModel, never> {
+export class LoadAction implements FirebaseActionType<StateModel, never> {
     type = "LOAD";
-    async execute(ctx: StateContext<StateModel>): Promise<StateModel> {
+    async execute(ctx: FirebaseStateContextType<StateModel>): Promise<StateModel> {
+        debugger;
         if (ctx.getState().users.length === 0) {
             ctx.patchState({ loading: true });
             const users = (await axios.get<ApiResponse>('https://randomuser.me/api/?results=20')).data.results;
@@ -29,12 +29,12 @@ export class LoadAction implements StoreAction<StateModel, never> {
     }
 }
 
-export class FilterAction implements StoreAction<StateModel, { gender: genderType }> {
+export class FilterAction implements FirebaseActionType<StateModel, { gender: genderType }> {
     type = "FILTER";
 
     constructor(public payload: { gender: genderType }) { }
 
-    async execute(ctx: StateContext<StateModel>): Promise<StateModel> {
+    async execute(ctx: FirebaseStateContextType<StateModel>): Promise<StateModel> {
         return ctx.patchState({
             genderFilter: this.payload.gender,
             filter: user => user.gender === this.payload.gender
@@ -42,10 +42,10 @@ export class FilterAction implements StoreAction<StateModel, { gender: genderTyp
     }
 }
 
-export class ClearFilterAction implements StoreAction<StateModel, never> {
+export class ClearFilterAction implements FirebaseActionType<StateModel, never> {
     type = "FILTER_CLEAR";
 
-    async execute(ctx: StateContext<StateModel>): Promise<StateModel> {
+    async execute(ctx: FirebaseStateContextType<StateModel>): Promise<StateModel> {
         return ctx.patchState({
             genderFilter: initialState.genderFilter,
             filter: initialState.filter
@@ -54,14 +54,5 @@ export class ClearFilterAction implements StoreAction<StateModel, never> {
 }
 
 const store = createStore<StateModel>(initialState, true);
-
-function callback(action: StoreAction<StateModel, unknown>) {
-    if (environment.production) {
-        // log action to database
-    } else {
-        localStorage.setItem('state', JSON.stringify(action));
-    }
-}
-store.addCallback(callback);
 
 export default store;

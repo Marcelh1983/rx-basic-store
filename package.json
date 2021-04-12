@@ -26,7 +26,7 @@
     "build": "nx build",
     "deploy:example": "firebase deploy",
     "test": "nx test",
-    "build:rx-basic-store": "rimraf dist/libs && rollup -c ./libs/rx-basic-store",
+    "build:rx-basic-store": "rimraf dist/libs/rx-basic-store && rollup -c ./libs/rx-basic-store/rollup.config.js",
     "build:rx-firebase-store": "rimraf dist/libs/rx-firebase-store && rollup -c ./libs/rx-firebase-store/rollup.config.js",
     "publish:rx-firebase-store": "npm run build:rx-firebase-store && npm publish ./dist/libs/rx-firebase-store --tag latest",
     "publish:lib": "npm run build:lib && npm publish ./dist/lib --tag latest",

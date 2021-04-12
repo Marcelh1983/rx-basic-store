@@ -1,7 +1,7 @@
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Observable, Subscription } from 'rxjs';
 import * as baseStore from 'rx-basic-store';
 import firebase from 'firebase/app';
-import { StateContext, StoreAction } from 'rx-basic-store';
+import { ActionType, StateContextType } from 'rx-basic-store';
 
 let functionRegion: Region;
 let app: firebase.app.App;
@@ -11,8 +11,26 @@ let storage: firebase.storage.Storage;
 let auth: firebase.auth.Auth;
 let logActionOptions: SyncOptions;
 
-export interface FirebaseStateContextType<T> extends baseStore.StateContextBaseType<T, FirebaseStoreAction<T, unknown>>  {
+export interface FirebaseStoreType<T> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    subscribe: (setState: ((state: T) => void)) => Subscription;
+    asObservable: Observable<T>;
+    dispatch: (action: ActionType<T, unknown>) => Promise<T>;
+    currentState: () => T;
+    addCallback: (callback: (action: ActionType<T, unknown>, oldState: T, newState: T, context: Map<string, unknown>) => void) => void
+}
 
+export interface FirebaseActionType<T, P> {
+    type: string;
+    payload?: P;
+    execute: (ctx: FirebaseStateContextType<T>) => Promise<T>;
+}
+
+export interface FirebaseStateContextType<T> extends StateContextType<T> {
+    functions: firebase.functions.Functions;
+    firestore: firebase.firestore.Firestore;
+    storage: firebase.storage.Storage;
+    auth: firebase.auth.Auth;
 }
 
 // eslint-disable-next-line @typescript-eslint/ban-types
@@ -30,22 +48,12 @@ export const setStoreContext = (context: { name: string, dependency: unknown }[]
     baseStore.setStoreContext(context);
 };
 
-export interface FirebaseStore<T> extends basicStore.Store<T> {
-    dispatch: (action: FirebaseStoreAction<T, unknown>) => Promise<T>;
-    addCallback: (callback: (action: FirebaseStoreAction<T, unknown>, oldState: T, newState: T, context: Map<string, unknown>) => void) => void
-}
 
-export interface FirebaseStoreAction<M, T> extends StoreAction<M, T> {
-    type: string;
-    payload?: T;
-    execute(ctx: FirebaseStateContext<M>): | Promise<M>;
-}
+export class FirebaseStateContext<T> implements FirebaseStateContextType<T> {
+    private baseStore: baseStore.StateContext<T>;
 
-export class FirebaseStateContext<T> {
-    private baseStore: StateContext<T>;
-   
-    constructor(subject: BehaviorSubject<T>) {
-        this.baseStore = new baseStore.StateContext(subject);
+    constructor(ctx: BehaviorSubject<T>) {
+        this.baseStore = new baseStore.StateContext(ctx);
     }
 
     get functions() {
@@ -82,6 +90,8 @@ export class FirebaseStateContext<T> {
         }
         return auth;
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    dispatch = (action: FirebaseActionType<T, unknown>) => this.baseStore.dispatch(action as any); // trick compiler
 
     getContext<T2>(name: string) {
         return this.baseStore.getContext<T2>(name);
@@ -89,7 +99,7 @@ export class FirebaseStateContext<T> {
     getState = () => this.baseStore.getState();
 
     setState = (state: T) => {
-       return this.baseStore.setState(state);
+        return this.baseStore.setState(state);
     }
     patchState = (state: Partial<T>) => {
         return this.baseStore.patchState(state);
@@ -103,16 +113,16 @@ export type Region = 'us-central1' | 'us-east1' | 'us-east4' | 'europe-west1' | 
 export interface SyncOptions {
     collectionName?: string;
     addUserId: boolean;
+    logAction?: boolean;
 }
 
-export function createStore<T>(initialState: T, devTools = false, syncOption?: SyncOptions): FirebaseStore<T> {
+export function createStore<T>(initialState: T, devTools = false, syncOption?: SyncOptions): FirebaseStoreType<T> {
     const subject = new BehaviorSubject<T>(initialState);
     const ctx = new FirebaseStateContext(subject);
-    const store = basicStore.createStore<T>(initialState, devTools, ctx) as FirebaseStore<T>;
+    const store = baseStore.createStore<T>(initialState, devTools, { ctx, subject });
     if (syncOption) {
         if (!auth || !auth.currentUser?.uid) { console.error('cannot (re)store state if firebase auth is not configured or user is not logged in.'); }
         // restore the state based on the current user. Make sure the user is already logged in before calling the createStore method.
-
         auth.onAuthStateChanged(user => {
             if (user) {
                 firestore.doc(`${syncOption.collectionName}/${user.uid}`).get().then(ref => {
@@ -122,7 +132,7 @@ export function createStore<T>(initialState: T, devTools = false, syncOption?: S
             }
         })
 
-        store.addCallback((_action: FirebaseStoreAction<T, unknown>, _oldState: T, newState: T) => {
+        store.addCallback((_action: FirebaseActionType<T, unknown>, _oldState: T, newState: T) => {
             if (auth.currentUser) {
                 if (syncOption.addUserId !== false) {
                     newState = { ...newState, createdBy: auth.currentUser?.uid };
@@ -132,8 +142,8 @@ export function createStore<T>(initialState: T, devTools = false, syncOption?: S
                 console.error('cannot store state when user is not logged in.')
             }
         });
-        if (logActionOptions) {
-            store.addCallback((action: FirebaseStoreAction<T, unknown>) => {
+        if (logActionOptions && !(syncOption?.logAction === false)) {
+            store.addCallback((action: FirebaseActionType<T, unknown>) => {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 let actionToStore = action as any;
                 if (logActionOptions.addUserId) {
