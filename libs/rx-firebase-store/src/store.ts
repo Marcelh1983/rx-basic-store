@@ -34,13 +34,13 @@ export interface FirebaseStateContextType<T> extends StateContextType<T> {
 }
 
 // eslint-disable-next-line @typescript-eslint/ban-types
-export const initStore = (firebaseApp: firebase.app.App, region?: Region, logOptions?: SyncOptions) => {
+export const initStore = (firebaseApp: firebase.app.App, region?: Region, syncOptions?: SyncOptions) => {
     app = firebaseApp;
     if (region) {
         functionRegion = region;
     }
-    if (logOptions) {
-        logActionOptions = logOptions;
+    if (syncOptions) {
+        logActionOptions = syncOptions;
     }
 };
 

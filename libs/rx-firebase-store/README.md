@@ -14,10 +14,27 @@ Here a [demo](https://rx-basic-store.web.app/) and the [code](https://github.com
 
 ### init
 
-firebase needs to to initialized.
+To init firebase (you can use the store without firebase for e.g. storybook or unittests in that case you don't have to initFirebase).
 
 ```typescript
- initFirebase(enviroment.firebase, 'europe-west1', { collectionName: 'actions' }) => {
+  const initStore = (firebaseApp: firebase.app.App, region?: Region, syncOptions?: SyncOptions)
+```
+- firebaseApp: firebase.app.App
+- region: used to configure the region of the functions
+- syncOptions: if logOptions are not null, all actions are logged to firebase.
+    - collectionName: the collection where actions are logged 
+    - addUserId: if true; added uuid of the user in the createdBy field. 
+    - logAction?: boolean; (default: true). If all actions are logged; it can be disabled for a single store. 
+
+#### example
+
+```typescript
+  const app = await firebase.initializeApp(environment.firebase, 'database');
+
+  initStore(app, 'europe-west1', {
+    collectionName,
+    addUserId: true,
+  });
 ``` 
 
 To log all actions to firebase use the logOptions.
@@ -60,7 +77,7 @@ export class LoadAction implements StoreAction<StateModel, never> {
 
 Store:
 - constructor: (initialState: T = The initial state, devTools: boolean = connect to redux devTools)
-- callback: (action: StoreAction<T, unknown>, oldState: T, newState: T, storeContext: Map<string, unknown>) => void  can be used capture all actions. For example to log all actions to the console or database.
+- addCallback: (callback: (action: ActionType<T, unknown>, oldState: T, newState: T, context: Map<string, unknown>) => void) => void  can be to add a callback function that captures all actions. For example to log all actions to the console or database.
 - dispatch: (action: StoreAction<T, unknown>) => Promise<T>: dispatches an action and return a promise with the new state
 - currentState: returns the current state.
 - asObservable: return an observable of T
@@ -72,7 +89,12 @@ ctx: StateContext<StateModel>
 - getState: gets the current state.
 - setState: set the entire new state.
 - patchState: set only the changed properties of the state, these will be merged with the current state.
-- auth, firestore, functions and storage to get firebase functions
+
+- Firebase functions:
+  - functions: firebase.functions.Functions
+  - firestore: firebase.firestore.Firestore;
+  - storage: firebase.storage.Storage;
+  - auth: firebase.auth.Auth;
 
 * To use getContext() you have to set the dependency somewhere where it is available:
 
