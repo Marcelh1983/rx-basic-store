@@ -1,7 +1,5 @@
 import { BehaviorSubject, Observable, Subscription } from 'rxjs';
-import * as baseStore from 'rx-basic-store';
 import firebase from 'firebase/app';
-import { ActionType, StateContextType } from 'rx-basic-store';
 
 let functionRegion: Region;
 let app: firebase.app.App;
@@ -11,7 +9,7 @@ let storage: firebase.storage.Storage;
 let auth: firebase.auth.Auth;
 let logActionOptions: SyncOptions;
 
-export interface FirebaseStoreType<T> {
+export interface StoreType<T> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     subscribe: (setState: ((state: T) => void)) => Subscription;
     asObservable: Observable<T>;
@@ -20,17 +18,24 @@ export interface FirebaseStoreType<T> {
     addCallback: (callback: (action: ActionType<T, unknown>, oldState: T, newState: T, context: Map<string, unknown>) => void) => void
 }
 
-export interface FirebaseActionType<T, P> {
+export interface ActionType<T, P> {
+    neverStoreOrLog?: boolean;
     type: string;
     payload?: P;
-    execute: (ctx: FirebaseStateContextType<T>) => Promise<T>;
+    execute: (ctx: StateContextType<T>) => Promise<T>;
 }
 
-export interface FirebaseStateContextType<T> extends StateContextType<T> {
+export interface StateContextType<T> {
     functions: firebase.functions.Functions;
     firestore: firebase.firestore.Firestore;
     storage: firebase.storage.Storage;
     auth: firebase.auth.Auth;
+
+    getContext: <ContextType> (name: string) => ContextType;
+    dispatch: (action: ActionType<T, unknown>) => Promise<T>;
+    getState: () => T;
+    setState: (state: T) => Promise<T>;
+    patchState: (state: Partial<T>) => Promise<T>;
 }
 
 // eslint-disable-next-line @typescript-eslint/ban-types
@@ -44,16 +49,38 @@ export const initStore = (firebaseApp: firebase.app.App, region?: Region, syncOp
     }
 };
 
+const storeContext = new Map<string, unknown>();
+
 export const setStoreContext = (context: { name: string, dependency: unknown }[]) => {
-    baseStore.setStoreContext(context);
+    context.forEach(c => {
+        if (storeContext.get(c.name)) {
+            console.warn(`${c.name} is already added in the store context. Overriding current value`);
+        }
+        storeContext.set(c.name, c.dependency);
+    });
 };
 
+export class StateContext<T> implements StateContextType<T>  {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    constructor(public ctx: BehaviorSubject<T>) { }
 
-export class FirebaseStateContext<T> implements FirebaseStateContextType<T> {
-    private baseStore: baseStore.StateContext<T>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    dispatch = (action: ActionType<T, unknown>) => action.execute(this as any); // trick compiler here
+    getContext<T2>(name: string) {
+        return storeContext.get(name) as T2;
+    }
+    getState = () => this.ctx.getValue();
 
-    constructor(ctx: BehaviorSubject<T>) {
-        this.baseStore = new baseStore.StateContext(ctx);
+    setState = (state: T) => {
+        const updatedState = { ...state };
+        this.ctx.next(updatedState);
+        return Promise.resolve(updatedState);
+    }
+    patchState = (state: Partial<T>) => {
+        const current = this.ctx.getValue();
+        const merged = { ...current, ...state } as T;
+        this.ctx.next(merged);
+        return Promise.resolve(merged);
     }
 
     get functions() {
@@ -90,20 +117,6 @@ export class FirebaseStateContext<T> implements FirebaseStateContextType<T> {
         }
         return auth;
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    dispatch = (action: FirebaseActionType<T, unknown>) => this.baseStore.dispatch(action as any); // trick compiler
-
-    getContext<T2>(name: string) {
-        return this.baseStore.getContext<T2>(name);
-    }
-    getState = () => this.baseStore.getState();
-
-    setState = (state: T) => {
-        return this.baseStore.setState(state);
-    }
-    patchState = (state: Partial<T>) => {
-        return this.baseStore.patchState(state);
-    }
 }
 
 export type Region = 'us-central1' | 'us-east1' | 'us-east4' | 'europe-west1' | 'europe-west2' | 'asia-east2' | 'asia-northeast1' |
@@ -116,10 +129,37 @@ export interface SyncOptions {
     logAction?: boolean;
 }
 
-export function createStore<T>(initialState: T, devTools = false, syncOption?: SyncOptions): FirebaseStoreType<T> {
+export function createStore<T>(initialState: T, devTools = false, syncOption?: SyncOptions): StoreType<T> {
     const subject = new BehaviorSubject<T>(initialState);
-    const ctx = new FirebaseStateContext(subject);
-    const store = baseStore.createStore<T>(initialState, devTools, { ctx, subject });
+    const ctx = new StateContext(subject);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let devToolsDispacher: any = null;
+    if (devTools) {
+        devToolsDispacher = getDevToolsDispatcher(subject.getValue());
+    }
+    const callbacks: ((action: ActionType<T, unknown>, oldState: T, newState: T, context: Map<string, unknown>) => void)[] = [];
+
+    const store: StoreType<T> = {
+        subscribe: (setState) => subject.subscribe(setState),
+        asObservable: subject.asObservable(),
+        dispatch: async (action: ActionType<T, unknown>) => {
+            const newState = await action.execute(ctx);
+            if (devTools && devToolsDispacher) {
+                devToolsDispacher(action, newState);
+            }
+            for (const callback of callbacks) {
+                callback(JSON.parse(JSON.stringify(action)) as ActionType<T, unknown>, ctx.getState(), newState, storeContext);
+            }
+            return newState;
+
+        },
+        currentState: () => subject.getValue(),
+        addCallback: (callback: (action: ActionType<T, unknown>, oldState: T, newState: T, context: Map<string, unknown>) => void) => {
+            callbacks.push(callback);
+        }
+
+    }
+    ctx.dispatch = store.dispatch;
     if (syncOption) {
         if (!auth || !auth.currentUser?.uid) { console.error('cannot (re)store state if firebase auth is not configured or user is not logged in.'); }
         // restore the state based on the current user. Make sure the user is already logged in before calling the createStore method.
@@ -131,8 +171,7 @@ export function createStore<T>(initialState: T, devTools = false, syncOption?: S
                 });
             }
         })
-
-        store.addCallback((_action: FirebaseActionType<T, unknown>, _oldState: T, newState: T) => {
+        store.addCallback((_action: ActionType<T, unknown>, _oldState: T, newState: T) => {
             if (auth.currentUser) {
                 if (syncOption.addUserId !== false) {
                     newState = { ...newState, createdBy: auth.currentUser?.uid };
@@ -143,7 +182,7 @@ export function createStore<T>(initialState: T, devTools = false, syncOption?: S
             }
         });
         if (logActionOptions && !(syncOption?.logAction === false)) {
-            store.addCallback((action: FirebaseActionType<T, unknown>) => {
+            store.addCallback((action: ActionType<T, unknown>) => {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 let actionToStore = action as any;
                 if (logActionOptions.addUserId) {
@@ -162,6 +201,16 @@ export function createStore<T>(initialState: T, devTools = false, syncOption?: S
     return store;
 }
 
+function getDevToolsDispatcher<T>(currentState: T) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const devTools = (window as any).__REDUX_DEVTOOLS_EXTENSION__?.connect({});
+    devTools?.init(currentState);
+
+    return function (action: ActionType<T, unknown>, currentState: T) {
+        devTools?.send(action.type, currentState);
+    };
+}
+
 export const dateId = () => {
     const dt = new Date();
     const year = dt.getFullYear();
@@ -173,3 +222,4 @@ export const dateId = () => {
     const milliseconds = (dt.getMilliseconds()).toString().padStart(3, "0");
     return `${year}${month}${day}${hour}${minutes}${seconds}${milliseconds}`;
 }
+

@@ -39,6 +39,14 @@ To init firebase (you can use the store without firebase for e.g. storybook or u
 
 To log all actions to firebase use the logOptions.
 
+Make sure the firebase used parts are imported somewhere in the application
+
+```typescript
+import 'firebase/firestore';
+import 'firebase/firebase-functions';
+import 'firebase/auth';
+```
+
 ### create
 ```typescript
 // creates a new store

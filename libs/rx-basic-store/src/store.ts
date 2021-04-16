@@ -58,9 +58,9 @@ export class StateContext<T> implements StateContextType<T>  {
     }
 }
 
-export function createStore<T>(initialState: T, devTools = false, context: { ctx: StateContextType<T>, subject: BehaviorSubject<T> } | null = null): StoreType<T> {
-    const subject = context ? context.subject : new BehaviorSubject<T>(initialState);
-    const ctx = context ? context.ctx : new StateContext(subject);
+export function createStore<T>(initialState: T, devTools = false): StoreType<T> {
+    const subject = new BehaviorSubject<T>(initialState);
+    const ctx = new StateContext(subject);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let devToolsDispacher: any = null;
     if (devTools) {
