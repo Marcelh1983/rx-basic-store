@@ -9,6 +9,22 @@ let storage: firebase.storage.Storage;
 let auth: firebase.auth.Auth;
 let logActionOptions: SyncOptions;
 
+const getFirestore = () => {
+    if (!app) { console.error('firebase not initialize') }
+    if (!firestore) {
+        firestore = app.firestore();
+    }
+    return firestore;
+}
+
+const getAuth = () => {
+    if (!app) { console.error('firebase not initialize') }
+    if (!auth) {
+        auth = app.auth();
+    }
+    return auth;
+}
+
 export interface StoreType<T> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     subscribe: (setState: ((state: T) => void)) => Subscription;
@@ -36,6 +52,7 @@ export interface StateContextType<T> {
     getState: () => T;
     setState: (state: T) => Promise<T>;
     patchState: (state: Partial<T>) => Promise<T>;
+    restoreState: () => Promise<T>;
 }
 
 // eslint-disable-next-line @typescript-eslint/ban-types
@@ -47,6 +64,7 @@ export const initStore = (firebaseApp: firebase.app.App, region?: Region, syncOp
     if (syncOptions) {
         logActionOptions = syncOptions;
     }
+
 };
 
 const storeContext = new Map<string, unknown>();
@@ -61,8 +79,7 @@ export const setStoreContext = (context: { name: string, dependency: unknown }[]
 };
 
 export class StateContext<T> implements StateContextType<T>  {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    constructor(public ctx: BehaviorSubject<T>) { }
+    constructor(public ctx: BehaviorSubject<T>, public syncOptions?: SyncOptions) { }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     dispatch = (action: ActionType<T, unknown>) => action.execute(this as any); // trick compiler here
@@ -83,6 +100,26 @@ export class StateContext<T> implements StateContextType<T>  {
         return Promise.resolve(merged);
     }
 
+    store = (state: Partial<T>) => this.syncOptions ?? storeState(state, this.syncOptions as unknown as SyncOptions);
+
+    restoreState = async () => {
+        const authentication = getAuth();
+        if (!authentication || !authentication.currentUser?.uid) {
+            console.error('cannot (re)store state if firebase auth is not configured or user is not logged in.');
+            return this.getState();
+        } else if (!this.syncOptions?.collectionName) {
+            console.error('cannot (re)store state if collection name is not set');
+            return this.getState();
+        } else {
+            // restore the state based on the current user. Make sure the user is already logged in before calling the createStore method.
+            // return new Promise<T>((resolve) => {
+            const fs = getFirestore();
+            const ref = await fs.doc(`${this.syncOptions?.collectionName}/${authentication.currentUser?.uid}`).get();
+            const state = ref.data() as T;
+            return this.setState(state);
+        }
+    }
+
     get functions() {
         if (!app) { console.error('firebase not initialize') }
         if (!functions) {
@@ -95,11 +132,7 @@ export class StateContext<T> implements StateContextType<T>  {
         return functions;
     }
     get firestore() {
-        if (!app) { console.error('firebase not initialize') }
-        if (!firestore) {
-            firestore = app.firestore();
-        }
-        return firestore;
+        return getFirestore();
     }
 
     get storage() {
@@ -111,11 +144,7 @@ export class StateContext<T> implements StateContextType<T>  {
     }
 
     get auth() {
-        if (!app) { console.error('firebase not initialize') }
-        if (!auth) {
-            auth = app.auth();
-        }
-        return auth;
+        return getAuth();
     }
 }
 
@@ -125,13 +154,18 @@ export type Region = 'us-central1' | 'us-east1' | 'us-east4' | 'europe-west1' | 
 
 export interface SyncOptions {
     collectionName?: string;
+    autoStore: boolean;
     addUserId: boolean;
     logAction?: boolean;
 }
 
-export function createStore<T>(initialState: T, devTools = false, syncOption?: SyncOptions): StoreType<T> {
+export function createStore<T>(initialState: T, devTools = false, syncOptions?: SyncOptions): StoreType<T> {
     const subject = new BehaviorSubject<T>(initialState);
-    const ctx = new StateContext(subject);
+    const ctx = new StateContext(subject, syncOptions);
+
+    if (syncOptions?.collectionName) {
+        syncOptions = { ...logActionOptions, ...syncOptions };
+    }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let devToolsDispacher: any = null;
     if (devTools) {
@@ -160,45 +194,50 @@ export function createStore<T>(initialState: T, devTools = false, syncOption?: S
 
     }
     ctx.dispatch = store.dispatch;
-    if (syncOption) {
-        if (!auth || !auth.currentUser?.uid) { console.error('cannot (re)store state if firebase auth is not configured or user is not logged in.'); }
-        // restore the state based on the current user. Make sure the user is already logged in before calling the createStore method.
-        auth.onAuthStateChanged(user => {
-            if (user) {
-                firestore.doc(`${syncOption.collectionName}/${user.uid}`).get().then(ref => {
-                    const state = ref.data() as T;
-                    ctx.setState(state);
-                });
-            }
-        })
+    if (syncOptions?.collectionName && syncOptions.autoStore) {
+        const nonNullableSyncOptions = syncOptions as unknown as SyncOptions;
         store.addCallback((_action: ActionType<T, unknown>, _oldState: T, newState: T) => {
-            if (auth.currentUser) {
-                if (syncOption.addUserId !== false) {
-                    newState = { ...newState, createdBy: auth.currentUser?.uid };
-                }
-                firestore.doc(`${syncOption.collectionName}/${auth.currentUser.uid}`).set(newState);
-            } else {
-                console.error('cannot store state when user is not logged in.')
+            if (!_action.neverStoreOrLog) {
+                storeState(newState, nonNullableSyncOptions);
             }
         });
-        if (logActionOptions && !(syncOption?.logAction === false)) {
+        if (!(syncOptions?.logAction === false)) {
             store.addCallback((action: ActionType<T, unknown>) => {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                let actionToStore = action as any;
-                if (logActionOptions.addUserId) {
-                    if (!auth) { console.error('cannot store state if firebase auth is not configured.'); }
-                    const currentUser = auth.currentUser;
-                    if (currentUser?.uid) {
-                        if (syncOption.addUserId !== false) {
-                            actionToStore = { ...actionToStore, createdBy: currentUser?.uid };
+                if (!action.neverStoreOrLog && logActionOptions) {
+                    let actionToStore = action as any;
+                    if (logActionOptions.addUserId) {
+                        const authentication = getAuth();
+                        if (!authentication) { console.error('cannot store state if firebase auth is not configured.'); }
+                        const currentUser = authentication.currentUser;
+                        if (currentUser?.uid) {
+                            if (nonNullableSyncOptions.addUserId !== false) {
+                                actionToStore = { ...actionToStore, createdBy: currentUser?.uid };
+                            }
                         }
                     }
+                    if (!app) { console.error('firebase not initialize') }
+                    const fs = getFirestore();
+                    fs.doc(`${logActionOptions.collectionName}/${dateId()}`).set(actionToStore);
                 }
-                firestore.doc(`${logActionOptions.collectionName}/${dateId()}`).set(actionToStore);
             });
         }
     }
     return store;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function storeState(newState: any, syncOptions: SyncOptions) {
+    const authentication = getAuth();
+    if (authentication.currentUser) {
+        if (syncOptions.addUserId !== false) {
+            newState = { ...newState, createdBy: authentication.currentUser?.uid };
+        }
+        const fs = getFirestore();
+        fs.doc(`${syncOptions.collectionName}/${authentication.currentUser.uid}`).set(newState);
+    } else {
+        console.error('cannot store state when user is not logged in.');
+    }
 }
 
 function getDevToolsDispatcher<T>(currentState: T) {
