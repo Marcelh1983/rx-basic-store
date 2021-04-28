@@ -11,7 +11,7 @@
     "esModuleInterop": false,                 
     "outDir": "../../dist/lib",
     "declarationDir": "",
-    "rootDirs": ["src", "../rx-basic-store"],
+    "rootDirs": ["src"],
   },
   "include": [
     "**/*.ts"

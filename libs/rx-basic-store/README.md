@@ -8,6 +8,8 @@ Created to seperate state management from the UI components without a lot of boi
 Inspired by this [blog](https://blog.logrocket.com/rxjs-with-react-hooks-for-state-management/) and the names of the events
 are inspired by [ngxs](https://www.ngxs.io)
 
+If you want to use this package with firebase, please use [rx-firebase-store](https://www.npmjs.com/package/rx-firebase-store) which is build on top of this package and let you auto store state, store action, easy access functions, firestore etc.
+
 ## Examples
 
 Here a [demo](https://rx-basic-store.web.app/) and the [code](https://github.com/Marcelh1983/rx-basic-store/tree/main/apps/example) 

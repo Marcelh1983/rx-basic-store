@@ -9,6 +9,18 @@ let storage: firebase.storage.Storage;
 let auth: firebase.auth.Auth;
 let logActionOptions: SyncOptions;
 
+const getCollectionName = (collectionName?: string | getString): string => {
+    if (isFunction(collectionName)) {
+        const f = collectionName as getString;
+        return f();
+    }
+    return collectionName ? collectionName.toString() : '';
+}
+
+const isFunction = (functionToCheck: unknown) => {
+    return functionToCheck && {}.toString.call(functionToCheck) === '[object Function]';
+}
+
 const getFirestore = () => {
     if (!app) { console.error('firebase not initialize') }
     if (!firestore) {
@@ -50,9 +62,13 @@ export interface StateContextType<T> {
     getContext: <ContextType> (name: string) => ContextType;
     dispatch: (action: ActionType<T, unknown>) => Promise<T>;
     getState: () => T;
+    store: (state: Partial<T>) => Promise<void>
     setState: (state: T) => Promise<T>;
     patchState: (state: Partial<T>) => Promise<T>;
     restoreState: () => Promise<T>;
+
+    storeCustomState: (state: unknown) => void;
+    getCustomState<T2>(): Promise<T2 | null>;
 }
 
 // eslint-disable-next-line @typescript-eslint/ban-types
@@ -100,7 +116,35 @@ export class StateContext<T> implements StateContextType<T>  {
         return Promise.resolve(merged);
     }
 
-    store = (state: Partial<T>) => this.syncOptions ?? storeState(state, this.syncOptions as unknown as SyncOptions);
+    storeCustomState = (state: unknown) => {
+        if (this.syncOptions?.collectionName) {
+            storeState(state, this.syncOptions as unknown as SyncOptions);
+        }
+    }
+
+    async getCustomState<T2>() {
+        const authentication = getAuth();
+        if (!authentication || !authentication.currentUser?.uid) {
+            console.error('cannot (re)store state if firebase auth is not configured or user is not logged in.');
+            return null;
+        } else if (!this.syncOptions?.collectionName) {
+            console.error('cannot (re)store state if collection name is not set');
+            return null;
+        } else {
+            const fs = getFirestore();
+            const ref = await fs.doc(`${getCollectionName(this.syncOptions?.collectionName)}/${authentication.currentUser?.uid}`).get();
+            const state = ref.data() as T2;
+            return state;
+        }
+    }
+
+    store = (state: Partial<T>) => {
+        if (this.syncOptions?.collectionName) {
+            return storeState(state, this.syncOptions as unknown as SyncOptions);
+        } else {
+            return Promise.resolve();
+        }
+    }
 
     restoreState = async () => {
         const authentication = getAuth();
@@ -114,7 +158,7 @@ export class StateContext<T> implements StateContextType<T>  {
             // restore the state based on the current user. Make sure the user is already logged in before calling the createStore method.
             // return new Promise<T>((resolve) => {
             const fs = getFirestore();
-            const ref = await fs.doc(`${this.syncOptions?.collectionName}/${authentication.currentUser?.uid}`).get();
+            const ref = await fs.doc(`${getCollectionName(this.syncOptions?.collectionName)}/${authentication.currentUser?.uid}`).get();
             const state = ref.data() as T;
             return this.setState(state);
         }
@@ -152,8 +196,10 @@ export type Region = 'us-central1' | 'us-east1' | 'us-east4' | 'europe-west1' | 
     'asia-northeast2' | 'us-west2' | 'us-west3' | 'us-west4' | 'europe-west3' | 'europe-west6' | 'northamerica-northeast1' |
     'southamerica-east1' | 'australia-southeast1' | 'asia-south1' | 'asia-southeast2' | 'asia-northeast3';
 
+type getString = () => string
+
 export interface SyncOptions {
-    collectionName?: string;
+    collectionName?: string | getString;
     autoStore: boolean;
     addUserId: boolean;
     logAction?: boolean;
@@ -218,7 +264,7 @@ export function createStore<T>(initialState: T, devTools = false, syncOptions?: 
                     }
                     if (!app) { console.error('firebase not initialize') }
                     const fs = getFirestore();
-                    fs.doc(`${logActionOptions.collectionName}/${dateId()}`).set(actionToStore);
+                    fs.doc(`${getCollectionName(logActionOptions.collectionName)}/${dateId()}`).set(actionToStore);
                 }
             });
         }
@@ -234,9 +280,10 @@ function storeState(newState: any, syncOptions: SyncOptions) {
             newState = { ...newState, createdBy: authentication.currentUser?.uid };
         }
         const fs = getFirestore();
-        fs.doc(`${syncOptions.collectionName}/${authentication.currentUser.uid}`).set(newState);
+        return fs.doc(`${getCollectionName(syncOptions.collectionName)}/${authentication.currentUser.uid}`).set(newState);
     } else {
         console.error('cannot store state when user is not logged in.');
+        return Promise.resolve();
     }
 }
 

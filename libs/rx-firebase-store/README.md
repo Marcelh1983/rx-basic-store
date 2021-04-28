@@ -22,7 +22,7 @@ To init firebase (you can use the store without firebase for e.g. storybook or u
 - firebaseApp: firebase.app.App
 - region: used to configure the region of the functions
 - syncOptions: if logOptions are not null, all actions are logged to firebase.
-    - collectionName: the collection where actions are logged 
+    - collectionName: the collection where actions are logged. can be a string or function. A function can be useful wehn actions where userId is part of the collection name and userId is not set before the store is initialized.
     - addUserId: if true; added uuid of the user in the createdBy field. 
     - logAction?: boolean; (default: true). If all actions are logged; it can be disabled for a single store. 
 
