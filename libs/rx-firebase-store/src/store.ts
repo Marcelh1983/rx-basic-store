@@ -250,9 +250,9 @@ export function createStore<T>(initialState: T, devTools = false, syncOptions?: 
     ctx.dispatch = store.dispatch;
     if (syncOptions?.collectionName && syncOptions.autoStore) {
         const nonNullableSyncOptions = syncOptions as unknown as SyncOptions;
-        store.addCallback((_action: ActionType<T, unknown>, _oldState: T, newState: T) => {
+        store.addCallback((_action: ActionType<T, unknown>) => {
             if (_action.neverStoreOrLog !== true) {
-                storeState(newState, nonNullableSyncOptions);
+                storeState(ctx.getState(), nonNullableSyncOptions);
             }
         });
         if (!(syncOptions?.logAction === false)) {
