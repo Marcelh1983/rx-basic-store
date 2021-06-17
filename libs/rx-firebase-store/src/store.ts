@@ -243,14 +243,14 @@ export function createStore<T>(initialState: T, devTools = false, syncOptions?: 
     if (syncOptions?.collectionName && syncOptions.autoStore) {
         const nonNullableSyncOptions = syncOptions as unknown as SyncOptions;
         store.addCallback((_action: ActionType<T, unknown>, _oldState: T, newState: T) => {
-            if (!_action.neverStoreOrLog) {
+            if (_action.neverStoreOrLog !== true) {
                 storeState(newState, nonNullableSyncOptions);
             }
         });
         if (!(syncOptions?.logAction === false)) {
             store.addCallback((action: ActionType<T, unknown>) => {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                if (!action.neverStoreOrLog && logActionOptions) {
+                if (action.neverStoreOrLog !== true && logActionOptions) {
                     let actionToStore = action as any;
                     if (logActionOptions.addUserId) {
                         const authentication = getAuth();
