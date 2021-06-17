@@ -1,7 +1,7 @@
 
 import axios from 'axios';
 import { ApiResponse, User } from './model';
-import { createStore, FirebaseActionType, FirebaseStateContextType } from 'rx-firebase-store';
+import { ActionType, createStore, StateContextType } from 'rx-firebase-store';
 
 export type genderType = 'none' | 'female' | 'male' | 'other';
 export interface StateModel {
@@ -17,10 +17,9 @@ const initialState: StateModel = {
     filter: (u) => true
 };
 
-export class LoadAction implements FirebaseActionType<StateModel, never> {
+export class LoadAction implements ActionType<StateModel, never> {
     type = "LOAD";
-    async execute(ctx: FirebaseStateContextType<StateModel>): Promise<StateModel> {
-        debugger;
+    async execute(ctx: StateContextType<StateModel>): Promise<StateModel> {
         if (ctx.getState().users.length === 0) {
             ctx.patchState({ loading: true });
             const users = (await axios.get<ApiResponse>('https://randomuser.me/api/?results=20')).data.results;
@@ -29,12 +28,12 @@ export class LoadAction implements FirebaseActionType<StateModel, never> {
     }
 }
 
-export class FilterAction implements FirebaseActionType<StateModel, { gender: genderType }> {
+export class FilterAction implements ActionType<StateModel, { gender: genderType }> {
     type = "FILTER";
 
     constructor(public payload: { gender: genderType }) { }
 
-    async execute(ctx: FirebaseStateContextType<StateModel>): Promise<StateModel> {
+    async execute(ctx: StateContextType<StateModel>): Promise<StateModel> {
         return ctx.patchState({
             genderFilter: this.payload.gender,
             filter: user => user.gender === this.payload.gender
@@ -42,10 +41,10 @@ export class FilterAction implements FirebaseActionType<StateModel, { gender: ge
     }
 }
 
-export class ClearFilterAction implements FirebaseActionType<StateModel, never> {
+export class ClearFilterAction implements ActionType<StateModel, never> {
     type = "FILTER_CLEAR";
 
-    async execute(ctx: FirebaseStateContextType<StateModel>): Promise<StateModel> {
+    async execute(ctx: StateContextType<StateModel>): Promise<StateModel> {
         return ctx.patchState({
             genderFilter: initialState.genderFilter,
             filter: initialState.filter

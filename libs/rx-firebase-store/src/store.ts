@@ -143,14 +143,14 @@ export class StateContext<T> implements StateContextType<T>  {
         if (this.syncOptions?.collectionName) {
             return storeState(state, this.syncOptions as unknown as SyncOptions);
         } else {
-            return Promise.resolve();
+            return Promise.resolve(this.ctx.getValue());
         }
     }
     storeCurrentState = () => {
         if (this.syncOptions?.collectionName) {
             return storeState(this.ctx.getValue(), this.syncOptions as unknown as SyncOptions);
         } else {
-            return Promise.resolve();
+            return Promise.resolve(this.ctx.getValue());
         }
     }
 
@@ -281,17 +281,18 @@ export function createStore<T>(initialState: T, devTools = false, syncOptions?: 
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function storeState(newState: any, syncOptions: SyncOptions) {
+async function storeState(newState: any, syncOptions: SyncOptions) {
     const authentication = getAuth();
     if (authentication.currentUser && newState) {
         if (syncOptions.addUserId !== false) {
             newState = { ...newState, createdBy: authentication.currentUser?.uid };
         }
         const fs = getFirestore();
-        return fs.doc(`${getCollectionName(syncOptions.collectionName)}/${authentication.currentUser.uid}`).set(newState);
+        await fs.doc(`${getCollectionName(syncOptions.collectionName)}/${authentication.currentUser.uid}`).set(newState);
+        return newState;
     } else {
         console.error('cannot store state when user is not logged in.');
-        return Promise.resolve();
+        return newState;
     }
 }
 
