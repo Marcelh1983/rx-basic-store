@@ -62,8 +62,8 @@ export interface StateContextType<T> {
     getContext: <ContextType> (name: string) => ContextType;
     dispatch: (action: ActionType<T, unknown>) => Promise<T>;
     getState: () => T;
-    store: (state: Partial<T>) => Promise<void>
-    storeCurrentState: () => Promise<void>
+    store: (state: Partial<T>) => Promise<T>
+    storeCurrentState: () => Promise<T>
     setState: (state: T) => Promise<T>;
     patchState: (state: Partial<T>) => Promise<T>;
     restoreState: () => Promise<T>;
