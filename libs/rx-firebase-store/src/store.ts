@@ -63,6 +63,7 @@ export interface StateContextType<T> {
     dispatch: (action: ActionType<T, unknown>) => Promise<T>;
     getState: () => T;
     store: (state: Partial<T>) => Promise<void>
+    storeCurrentState: () => Promise<void>
     setState: (state: T) => Promise<T>;
     patchState: (state: Partial<T>) => Promise<T>;
     restoreState: () => Promise<T>;
@@ -141,6 +142,13 @@ export class StateContext<T> implements StateContextType<T>  {
     store = (state: Partial<T>) => {
         if (this.syncOptions?.collectionName) {
             return storeState(state, this.syncOptions as unknown as SyncOptions);
+        } else {
+            return Promise.resolve();
+        }
+    }
+    storeCurrentState = () => {
+        if (this.syncOptions?.collectionName) {
+            return storeState(this.ctx.getValue(), this.syncOptions as unknown as SyncOptions);
         } else {
             return Promise.resolve();
         }
@@ -275,7 +283,7 @@ export function createStore<T>(initialState: T, devTools = false, syncOptions?: 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function storeState(newState: any, syncOptions: SyncOptions) {
     const authentication = getAuth();
-    if (authentication.currentUser) {
+    if (authentication.currentUser && newState) {
         if (syncOptions.addUserId !== false) {
             newState = { ...newState, createdBy: authentication.currentUser?.uid };
         }
