@@ -211,7 +211,7 @@ export interface SyncOptions {
     autoStore: boolean;
     addUserId: boolean;
     logAction?: boolean;
-    excludedFields: Array<string>;
+    excludedFields?: Array<string>;
 }
 
 export function createStore<T>(initialState: T, devTools = false, syncOptions?: SyncOptions): StoreType<T> {
