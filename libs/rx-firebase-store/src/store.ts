@@ -257,9 +257,12 @@ export function createStore<T>(initialState: T, devTools = false, syncOptions?: 
         });
         if (!(syncOptions?.logAction === false)) {
             store.addCallback((action: ActionType<T, unknown>) => {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 if (action.neverStoreOrLog !== true && logActionOptions) {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     let actionToStore = action as any;
+                    if (actionToStore['created'] === null) {
+                        actionToStore = { ...actionToStore, created: new Date() };
+                    }
                     if (logActionOptions.addUserId) {
                         const authentication = getAuth();
                         if (!authentication) { console.error('cannot store state if firebase auth is not configured.'); }
