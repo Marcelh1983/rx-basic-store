@@ -211,6 +211,7 @@ export interface SyncOptions {
     autoStore: boolean;
     addUserId: boolean;
     logAction?: boolean;
+    excludedFields: Array<string>;
 }
 
 export function createStore<T>(initialState: T, devTools = false, syncOptions?: SyncOptions): StoreType<T> {
@@ -262,6 +263,11 @@ export function createStore<T>(initialState: T, devTools = false, syncOptions?: 
                     let actionToStore = action as any;
                     if (!actionToStore['created']) {
                         actionToStore = { ...actionToStore, created: new Date() };
+                    }
+                    if (logActionOptions.excludedFields) {
+                        for(const excludedField of logActionOptions.excludedFields) {
+                            delete actionToStore[excludedField];
+                        }
                     }
                     if (logActionOptions.addUserId) {
                         const authentication = getAuth();
