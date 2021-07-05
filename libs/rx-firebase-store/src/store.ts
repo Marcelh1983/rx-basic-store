@@ -260,7 +260,7 @@ export function createStore<T>(initialState: T, devTools = false, syncOptions?: 
                 if (action.neverStoreOrLog !== true && logActionOptions) {
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     let actionToStore = action as any;
-                    if (actionToStore['created'] === null) {
+                    if (!actionToStore['created']) {
                         actionToStore = { ...actionToStore, created: new Date() };
                     }
                     if (logActionOptions.addUserId) {
