@@ -1,12 +1,23 @@
 {
   "version": 2,
-  "cli": { "defaultCollection": "@nrwl/react" },
+  "cli": {
+    "defaultCollection": "@nrwl/react"
+  },
   "defaultProject": "example",
   "generators": {
     "@nrwl/react": {
-      "application": { "style": "scss", "linter": "eslint", "babel": true },
-      "component": { "style": "scss" },
-      "library": { "style": "scss", "linter": "eslint" }
+      "application": {
+        "style": "scss",
+        "linter": "eslint",
+        "babel": true
+      },
+      "component": {
+        "style": "scss"
+      },
+      "library": {
+        "style": "scss",
+        "linter": "eslint"
+      }
     }
   },
   "projects": {
@@ -59,9 +70,13 @@
         },
         "serve": {
           "executor": "@nrwl/web:dev-server",
-          "options": { "buildTarget": "example:build" },
+          "options": {
+            "buildTarget": "example:build"
+          },
           "configurations": {
-            "production": { "buildTarget": "example:build:production" }
+            "production": {
+              "buildTarget": "example:build:production"
+            }
           }
         },
         "lint": {
@@ -87,7 +102,9 @@
       "targets": {
         "lint": {
           "executor": "@nrwl/linter:eslint",
-          "options": { "lintFilePatterns": ["libs/rx-basic-store/**/*.ts"] }
+          "options": {
+            "lintFilePatterns": ["libs/rx-basic-store/**/*.ts"]
+          }
         },
         "test": {
           "executor": "@nrwl/jest:jest",
@@ -106,7 +123,9 @@
       "targets": {
         "lint": {
           "executor": "@nrwl/linter:eslint",
-          "options": { "lintFilePatterns": ["libs/rx-firebase-store/**/*.ts"] }
+          "options": {
+            "lintFilePatterns": ["libs/rx-firebase-store/**/*.ts"]
+          }
         },
         "test": {
           "executor": "@nrwl/jest:jest",

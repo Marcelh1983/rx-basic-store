@@ -1,23 +1,44 @@
 {
   "implicitDependencies": {
     "workspace.json": "*",
-    "package.json": { "dependencies": "*", "devDependencies": "*" },
+    "package.json": {
+      "dependencies": "*",
+      "devDependencies": "*"
+    },
     "tsconfig.base.json": "*",
     "tslint.json": "*",
     ".eslintrc.json": "*",
     "nx.json": "*"
   },
-  "affected": { "defaultBase": "master" },
+  "affected": {
+    "defaultBase": "master"
+  },
   "npmScope": "rx-basic-store",
   "tasksRunnerOptions": {
     "default": {
       "runner": "@nrwl/workspace/tasks-runners/default",
-      "options": { "cacheableOperations": ["build", "lint"] }
+      "options": {
+        "cacheableOperations": ["build", "lint"]
+      }
     }
   },
   "projects": {
-    "example": { "tags": [] },
-    "rx-basic-store": { "tags": [] },
-    "rx-firebase-store": { "tags": [] }
+    "example": {
+      "tags": []
+    },
+    "rx-basic-store": {
+      "tags": []
+    },
+    "rx-firebase-store": {
+      "tags": []
+    }
+  },
+  "targetDependencies": {
+    "build": [
+      {
+        "target": "build",
+        "projects": "dependencies"
+      }
+    ]
   }
 }
