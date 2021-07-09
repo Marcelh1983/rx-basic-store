@@ -264,8 +264,13 @@ export function createStore<T>(initialState: T, devTools = false, syncOptions?: 
                     if (!actionToStore['created']) {
                         actionToStore = { ...actionToStore, created: new Date() };
                     }
+                    if (syncOptions?.addUserId && !actionToStore['createdby']) {
+                        const authentication = getAuth();
+                        const currentUser = authentication.currentUser;
+                        actionToStore = { ...actionToStore, createdby: currentUser?.uid };
+                    }
                     if (logActionOptions.excludedFields) {
-                        for(const excludedField of logActionOptions.excludedFields) {
+                        for (const excludedField of logActionOptions.excludedFields) {
                             delete actionToStore[excludedField];
                         }
                     }
