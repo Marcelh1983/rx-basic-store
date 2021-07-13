@@ -301,6 +301,11 @@ async function storeState(newState: any, syncOptions: SyncOptions) {
         if (syncOptions.addUserId !== false) {
             newState = { ...newState, createdBy: authentication.currentUser?.uid };
         }
+        if (syncOptions.excludedFields) {
+            for (const excludedField of syncOptions.excludedFields) {
+                delete newState[excludedField];
+            }
+        }
         const fs = getFirestore();
         await fs.doc(`${getCollectionName(syncOptions.collectionName)}/${authentication.currentUser.uid}`).set(newState);
         return newState;
