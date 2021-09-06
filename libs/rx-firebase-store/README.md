@@ -99,10 +99,10 @@ ctx: StateContext<StateModel>
 - patchState: set only the changed properties of the state, these will be merged with the current state.
 
 - Firebase functions:
-  - functions: firebase.functions.Functions
-  - firestore: firebase.firestore.Firestore;
-  - storage: firebase.storage.Storage;
-  - auth: firebase.auth.Auth;
+  - functions: Functions
+  - firestore: Firestore;
+  - storage: FirebaseStorage;
+  - auth: Auth;
 
 * To use getContext() you have to set the dependency somewhere where it is available:
 
