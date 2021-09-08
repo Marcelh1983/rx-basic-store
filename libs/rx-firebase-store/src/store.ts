@@ -2,7 +2,7 @@ import { BehaviorSubject, Observable, Subscription } from 'rxjs';
 import { Auth, getAuth as getA } from "firebase/auth";
 import { Functions, getFunctions } from "firebase/functions";
 import { FirebaseStorage, getStorage } from "firebase/storage";
-import { doc, Firestore, getDoc, getFirestore as getFs, setDoc } from "firebase/firestore";
+import { doc, Firestore, getDoc, getFirestore as getFs, setDoc } from "firebase/firestore/lite";
 import { FirebaseApp } from "firebase/app";
 
 let functionRegion: Region;
