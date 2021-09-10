@@ -1,17 +1,16 @@
 import { BehaviorSubject, Observable, Subscription } from 'rxjs';
-import { Auth, getAuth as getA } from "firebase/auth";
-import { Functions, getFunctions } from "firebase/functions";
-import { FirebaseStorage, getStorage } from "firebase/storage";
-import { doc, Firestore, getDoc, getFirestore as getFs, setDoc } from "firebase/firestore/lite";
-import { FirebaseApp } from "firebase/app";
-
-let functionRegion: Region;
-let app: FirebaseApp;
-let functions: Functions;
-let firestore: Firestore;
-let storage: FirebaseStorage;
-let auth: Auth;
+import { Auth, getAuth as getAuthLib } from "firebase/auth";
+import { Functions, getFunctions as getFunctionsLib } from "firebase/functions";
+import { FirebaseStorage, getStorage as getStorageLib } from "firebase/storage";
+import { doc, Firestore, getDoc, getFirestore as getFirestoreLib, setDoc } from "firebase/firestore/lite";
+import { FirebaseOptions, initializeApp } from "firebase/app";
+// let _functions: Functions;
+// let _firestore: Firestore;
+// let _storage: FirebaseStorage;
+// let _auth: Auth;
 let logActionOptions: SyncOptions;
+let firebaseOption: FirebaseOptions;
+let configuratedRegion: Region;
 
 const getCollectionName = (collectionName?: string | getString): string => {
     if (isFunction(collectionName)) {
@@ -25,21 +24,6 @@ const isFunction = (functionToCheck: unknown) => {
     return functionToCheck && {}.toString.call(functionToCheck) === '[object Function]';
 }
 
-const getFirestore = () => {
-    if (!app) { console.error('firebase not initialize') }
-    if (!firestore) {      
-        firestore = getFs(app);
-    }
-    return firestore;
-}
-
-const getAuth = () => {
-    if (!app) { console.error('firebase not initialize') }
-    if (!auth) {
-        auth = getA(app);
-    }
-    return auth;
-}
 
 export interface StoreType<T> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -75,17 +59,22 @@ export interface StateContextType<T> {
     storeCustomState: (state: unknown) => void;
     getCustomState<T2>(): Promise<T2 | null>;
 }
+export type Region = 'us-central1' | 'us-east1' | 'us-east4' | 'europe-west1' | 'europe-west2' | 'asia-east2' | 'asia-northeast1' |
+    'asia-northeast2' | 'us-west2' | 'us-west3' | 'us-west4' | 'europe-west3' | 'europe-west6' | 'northamerica-northeast1' |
+    'southamerica-east1' | 'australia-southeast1' | 'asia-south1' | 'asia-southeast2' | 'asia-northeast3';
 
 // eslint-disable-next-line @typescript-eslint/ban-types
-export const initStore = (firebaseApp: FirebaseApp, region?: Region, syncOptions?: SyncOptions) => {
-    app = firebaseApp;
-    if (region) {
-        functionRegion = region;
-    }
+export const initStore = (options: FirebaseOptions, region?:Region,  syncOptions?: SyncOptions) => {
     if (syncOptions) {
         logActionOptions = syncOptions;
     }
-
+    if (options) {
+        firebaseOption = options;
+    }
+    if (region) {
+        configuratedRegion = region;
+    }
+    
 };
 
 const storeContext = new Map<string, unknown>();
@@ -128,16 +117,17 @@ export class StateContext<T> implements StateContextType<T>  {
     }
 
     async getCustomState<T2>() {
-        const authentication = getAuth();
-        if (!authentication || !authentication.currentUser?.uid) {
+        const app = initializeApp(firebaseOption);
+        const auth = getAuthLib(app);
+        const firestore = getFirestoreLib(app);
+        if (!auth || !auth.currentUser?.uid) {
             console.error('cannot (re)store state if firebase auth is not configured or user is not logged in.');
             return null;
         } else if (!this.syncOptions?.collectionName) {
             console.error('cannot (re)store state if collection name is not set');
             return null;
         } else {
-            const fs = getFirestore();
-            const docRef = doc(fs, getCollectionName(this.syncOptions?.collectionName), authentication.currentUser?.uid);
+            const docRef = doc(firestore, `${getCollectionName(this.syncOptions?.collectionName)}/${auth.currentUser?.uid}`);
             const docSnap = await getDoc(docRef);
             const state = docSnap.data() as T2;
             return state;
@@ -160,8 +150,10 @@ export class StateContext<T> implements StateContextType<T>  {
     }
 
     restoreState = async () => {
-        const authentication = getAuth();
-        if (!authentication || !authentication.currentUser?.uid) {
+        const app = initializeApp(firebaseOption);
+        const auth = getAuthLib(app);
+        const firestore = getFirestoreLib(app);
+        if (!auth || !auth.currentUser?.uid) {
             console.error('cannot (re)store state if firebase auth is not configured or user is not logged in.');
             return this.getState();
         } else if (!this.syncOptions?.collectionName) {
@@ -170,8 +162,7 @@ export class StateContext<T> implements StateContextType<T>  {
         } else {
             // restore the state based on the current user. Make sure the user is already logged in before calling the createStore method.
             // return new Promise<T>((resolve) => {
-            const fs = getFirestore();
-            const docRef = doc(fs, getCollectionName(this.syncOptions?.collectionName), authentication.currentUser?.uid);
+            const docRef = doc(firestore, `${getCollectionName(this.syncOptions?.collectionName)}/${auth.currentUser?.uid}`);
             const docSnap = await getDoc(docRef);
             const state = docSnap.data() as T;
             return this.setState(state);
@@ -179,35 +170,25 @@ export class StateContext<T> implements StateContextType<T>  {
     }
 
     get functions() {
-        if (!app) { console.error('firebase not initialize') }
-        if (!functions) {
-            functions = getFunctions(app);
-            if (functionRegion) {
-                functions.region = functionRegion;
-            }
-        }
-        return functions;
+        const app = initializeApp(firebaseOption);
+        return getFunctionsLib(app, configuratedRegion);
     }
+
     get firestore() {
-        return getFirestore();
+        const app = initializeApp(firebaseOption);
+        return getFirestoreLib(app);
     }
 
     get storage() {
-        if (!app) { console.error('firebase not initialize') }
-        if (!storage) {
-            storage = getStorage(app);
-        }
-        return storage;
+        const app = initializeApp(firebaseOption);
+        return getStorageLib(app);
     }
 
     get auth() {
-        return getAuth();
+        const app = initializeApp(firebaseOption);
+        return getAuthLib(app);
     }
 }
-
-export type Region = 'us-central1' | 'us-east1' | 'us-east4' | 'europe-west1' | 'europe-west2' | 'asia-east2' | 'asia-northeast1' |
-    'asia-northeast2' | 'us-west2' | 'us-west3' | 'us-west4' | 'europe-west3' | 'europe-west6' | 'northamerica-northeast1' |
-    'southamerica-east1' | 'australia-southeast1' | 'asia-south1' | 'asia-southeast2' | 'asia-northeast3';
 
 type getString = () => string
 
@@ -222,7 +203,6 @@ export interface SyncOptions {
 export function createStore<T>(initialState: T, devTools = false, syncOptions?: SyncOptions): StoreType<T> {
     const subject = new BehaviorSubject<T>(initialState);
     const ctx = new StateContext(subject, syncOptions);
-
     if (syncOptions?.collectionName) {
         syncOptions = { ...logActionOptions, ...syncOptions };
     }
@@ -263,6 +243,9 @@ export function createStore<T>(initialState: T, devTools = false, syncOptions?: 
         });
         if (!(syncOptions?.logAction === false)) {
             store.addCallback((action: ActionType<T, unknown>) => {
+                const app = initializeApp(firebaseOption);
+                const auth =  getAuthLib(app);
+                const firestore =  getFirestoreLib(app);
                 if (action.neverStoreOrLog !== true && logActionOptions) {
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     let actionToStore = action as any;
@@ -270,8 +253,7 @@ export function createStore<T>(initialState: T, devTools = false, syncOptions?: 
                         actionToStore = { ...actionToStore, time: new Date().getTime() };
                     }
                     if (syncOptions?.addUserId && !actionToStore['createdBy']) {
-                        const authentication = getAuth();
-                        const currentUser = authentication.currentUser;
+                        const currentUser = auth.currentUser;
                         actionToStore = { ...actionToStore, createdBy: currentUser?.uid };
                     }
                     if (logActionOptions.excludedFields) {
@@ -280,19 +262,15 @@ export function createStore<T>(initialState: T, devTools = false, syncOptions?: 
                         }
                     }
                     if (logActionOptions.addUserId) {
-                        const authentication = getAuth();
-                        if (!authentication) { console.error('cannot store state if firebase auth is not configured.'); }
-                        const currentUser = authentication.currentUser;
+                        if (!auth) { console.error('cannot store state if firebase auth is not configured.'); }
+                        const currentUser = auth.currentUser;
                         if (currentUser?.uid) {
                             if (nonNullableSyncOptions.addUserId !== false) {
                                 actionToStore = { ...actionToStore, createdBy: currentUser?.uid };
                             }
                         }
                     }
-                    if (!app) { console.error('firebase not initialize') }
-                    const fs = getFirestore();
-                    
-                    const docRef = doc(fs, getCollectionName(logActionOptions.collectionName), dateId());
+                    const docRef = doc(firestore, `${getCollectionName(logActionOptions.collectionName)}/${dateId()}`);
                     setDoc(docRef, actionToStore);
                 }
             });
@@ -303,18 +281,20 @@ export function createStore<T>(initialState: T, devTools = false, syncOptions?: 
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function storeState(newState: any, syncOptions: SyncOptions) {
-    const authentication = getAuth();
-    if (authentication.currentUser && newState) {
+    const app = initializeApp(firebaseOption);
+    const auth =  getAuthLib(app);
+    const firestore =  getFirestoreLib(app);
+
+    if (auth.currentUser && newState) {
         if (syncOptions.addUserId !== false) {
-            newState = { ...newState, createdBy: authentication.currentUser?.uid };
+            newState = { ...newState, createdBy: auth.currentUser?.uid };
         }
         if (syncOptions.excludedFields) {
             for (const excludedField of syncOptions.excludedFields) {
                 delete newState[excludedField];
             }
         }
-        const fs = getFirestore();
-        const docRef = doc(fs, getCollectionName(syncOptions.collectionName), authentication.currentUser.uid);
+        const docRef = doc(firestore, `${getCollectionName(syncOptions.collectionName)}/${auth.currentUser.uid}`);
         await setDoc(docRef, newState);
         return newState;
     } else {

@@ -1,7 +1,4 @@
 // rollup.config.js
-import commonjs from '@rollup/plugin-commonjs';
-import resolve from '@rollup/plugin-node-resolve';
-import peerDepsExternal from 'rollup-plugin-peer-deps-external';
 import typescript from '@rollup/plugin-typescript';
 import copy from 'rollup-plugin-copy';
 // import sourcemaps from 'rollup-plugin-sourcemaps';
@@ -15,9 +12,6 @@ export default {
     
   },
   plugins: [
-    peerDepsExternal(),
-    resolve(),
-    commonjs(),
     typescript({
       tsconfig: './libs/rx-firebase-store/tsconfig.lib.prod.json',
     }),

@@ -17,9 +17,9 @@ Here a [demo](https://rx-basic-store.web.app/) and the [code](https://github.com
 To init firebase (you can use the store without firebase for e.g. storybook or unittests in that case you don't have to initFirebase).
 
 ```typescript
-  const initStore = (firebaseApp: firebase.app.App, region?: Region, syncOptions?: SyncOptions)
+  const initStore = (options: FirebaseOptions, region?: Region, syncOptions?: SyncOptions)
 ```
-- firebaseApp: firebase.app.App
+- options: FirebaseOptions
 - region: used to configure the region of the functions
 - syncOptions: if logOptions are not null, all actions are logged to firebase.
     - collectionName: the collection where actions are logged. can be a string or function. A function can be useful wehn actions where userId is part of the collection name and userId is not set before the store is initialized.
@@ -29,9 +29,7 @@ To init firebase (you can use the store without firebase for e.g. storybook or u
 #### example
 
 ```typescript
-  const app = await firebase.initializeApp(environment.firebase, 'database');
-
-  initStore(app, 'europe-west1', {
+  initStore(environment.firebase, 'europe-west1', {
     collectionName,
     addUserId: true,
   });
