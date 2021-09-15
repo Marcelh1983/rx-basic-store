@@ -2,7 +2,7 @@ import { BehaviorSubject, Observable, Subscription } from 'rxjs';
 import { Auth, getAuth as getAuthLib } from "firebase/auth";
 import { Functions, getFunctions as getFunctionsLib } from "firebase/functions";
 import { FirebaseStorage, getStorage as getStorageLib } from "firebase/storage";
-import { doc, Firestore, getDoc, getFirestore as getFirestoreLib, setDoc } from "firebase/firestore/lite";
+import { doc, Firestore, getDoc, getFirestore as getFirestoreLib, setDoc } from "firebase/firestore";
 import { FirebaseOptions, initializeApp } from "firebase/app";
 // let _functions: Functions;
 // let _firestore: Firestore;
