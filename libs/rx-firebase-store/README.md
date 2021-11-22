@@ -1,6 +1,6 @@
 # rx-firebase-store
 
-A simple reactive store for state management using RxJs. 
+Auto store state using a simple reactive store with state management using RxJs. 
 Can be used in React but will also work with other frameworks.
 
 Created to seperate state management from the UI components without a lot of boilerplate code.
