@@ -75,11 +75,11 @@ export class LoadAction implements StoreAction<StateModel, never> {
 
 Store:
 - constructor: (initialState: T = The initial state, devTools: boolean = connect to redux devTools)
-- addCallback: (callback: (action: ActionType<T, unknown>, oldState: T, newState: T, context: Map<string, unknown>) => void) => void  can be to add a callback function that captures all actions. For example to log all actions to the console or database.
+- addCallback: (callback: (action: ActionType<T, unknown>, oldState: T, newState: T, context: Map<string, unknown>) => void)=> void  can be to add a callback function that captures all actions. For example to log all actions to the console or database.
 - dispatch: (action: StoreAction<T, unknown>) => Promise<T>: dispatches an action and return a promise with the new state
 - currentState: returns the current state.
 - asObservable: return an observable of T
-
+ - overrideSyncOptions = (newSyncOptions: Partial<SyncOptions>): can be used to change sync options after it is created
 
 ctx: StateContext<StateModel>
 - getContext<T2>(name: string): gets the context that is added while creating the store. E.g. use to access History *
