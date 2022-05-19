@@ -1,7 +1,7 @@
 
 import axios from 'axios';
 import { ApiResponse, User } from './model';
-import { ActionType, createStore, StateContextType } from 'rx-firebase-store';
+import { ActionType, StateContextType } from 'rx-basic-store';
 
 export type genderType = 'none' | 'female' | 'male' | 'other';
 export interface StateModel {
@@ -10,7 +10,7 @@ export interface StateModel {
     genderFilter: genderType;
     filter: (user: User) => boolean
 }
-const initialState: StateModel = {
+export const initialState: StateModel = {
     loading: true,
     users: [],
     genderFilter: 'none',
@@ -51,7 +51,3 @@ export class ClearFilterAction implements ActionType<StateModel, never> {
         });
     }
 }
-
-const store = createStore<StateModel>(initialState, true);
-
-export default store;
