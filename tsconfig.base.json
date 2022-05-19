@@ -3,7 +3,7 @@
   "compilerOptions": {
     "rootDir": ".",
     "sourceMap": true,
-    "declaration": true,
+    "declaration": false,
     "moduleResolution": "node",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
@@ -15,8 +15,9 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "rx-basic-store": ["libs/rx-basic-store/src/index.ts"],
-      "rx-firebase-store": ["libs/rx-firebase-store/src/index.ts"]
+      "react-firebase-store": ["packages/react-firebase-store/src/index.ts"],
+      "rx-basic-store": ["packages/rx-basic-store/src/index.ts"],
+      "rx-firebase-store": ["packages/rx-firebase-store/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

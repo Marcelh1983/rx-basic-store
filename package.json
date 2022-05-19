@@ -1,92 +1,58 @@
 {
-  "name": "rx-basic-store",
-  "version": "1.1.0",
+  "name": "rx-store",
+  "version": "0.0.0",
   "license": "MIT",
-  "author": {
-    "name": "Marcel Hoekstra"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Marcelh1983/rx-basic-store.git"
-  },
-  "keywords": [
-    "Store",
-    "RxJs",
-    "React"
-  ],
-  "main": "index.js",
-  "types": "index.d.ts",
-  "bugs": {
-    "url": "https://github.com/Marcelh1983/rx-basic-store/issues"
-  },
-  "homepage": "https://github.com/Marcelh1983/rx-basic-store",
   "scripts": {
     "nx": "nx",
-    "start": "nx serve",
-    "build": "nx build",
-    "deploy:example": "firebase deploy",
-    "test": "nx test",
-    "build:rx-basic-store": "rimraf dist/libs/rx-basic-store && rollup -c ./libs/rx-basic-store/rollup.config.js",
-    "build:rx-firebase-store": "rimraf dist/libs/rx-firebase-store && rollup -c ./libs/rx-firebase-store/rollup.config.js",
-    "publish:rx-firebase-store": "npm run build:rx-firebase-store && npm publish ./dist/libs/rx-firebase-store --tag latest",
-    "publish:rx-basic-store": "npm run build:rx-basic-store && npm publish ./dist/libs/rx-basic-store --tag latest",
-    "lint": "nx workspace-lint && nx lint",
-    "format": "nx format:write",
-    "format:write": "nx format:write",
-    "format:check": "nx format:check",
-    "update": "nx migrate latest",
-    "workspace-generator": "nx workspace-generator",
-    "dep-graph": "nx dep-graph",
-    "help": "nx help"
+    "start:example": "nx serve example",
+    "build:rx-basic-store": "nx build rx-basic-store",
+    "build:rx-firebase-store": "nx build rx-firebase-store",
+    "publish:next:rx-basic-store": "npm run build:rx-basic-store && npm publish ./dist/packages/rx-basic-store --tag next",
+    "publish:next:rx-firebase-store": "npm run build:rx-firebase-store && npm publish ./dist/packages/rx-firebase-store --tag next"
   },
+  "private": true,
   "dependencies": {
-    "axios": "^0.21.3",
     "core-js": "^3.6.5",
-    "firebase": "^9.0.1",
+    "firebase": "^9.8.1",
     "react": "18.1.0",
-    "react-dom": "18.1.0"
-  },
-  "peerDependencies": {
-    "rxjs": ">= 6.0.0"
+    "react-dom": "18.1.0",
+    "regenerator-runtime": "0.13.7",
+    "tslib": "^2.3.0"
   },
   "devDependencies": {
     "@nrwl/cli": "14.1.7",
     "@nrwl/cypress": "14.1.7",
     "@nrwl/eslint-plugin-nx": "14.1.7",
+    "@nrwl/jest": "14.1.7",
     "@nrwl/linter": "14.1.7",
     "@nrwl/react": "14.1.7",
-    "@nrwl/tao": "14.1.7",
     "@nrwl/web": "14.1.7",
     "@nrwl/workspace": "14.1.7",
-    "@rollup/plugin-commonjs": "^17.1.0",
-    "@rollup/plugin-node-resolve": "^11.2.0",
-    "@rollup/plugin-typescript": "^8.2.0",
-    "@types/node": "14.14.33",
+    "@testing-library/react": "13.1.1",
+    "@types/jest": "27.4.1",
+    "@types/node": "16.11.7",
     "@types/react": "18.0.8",
     "@types/react-dom": "18.0.3",
-    "@typescript-eslint/eslint-plugin": "5.18.0",
-    "@typescript-eslint/parser": "5.18.0",
-    "dotenv": "10.0.0",
-    "eslint": "8.12.0",
+    "@typescript-eslint/eslint-plugin": "~5.18.0",
+    "@typescript-eslint/parser": "~5.18.0",
+    "babel-jest": "27.5.1",
+    "cypress": "^9.1.0",
+    "eslint": "~8.12.0",
     "eslint-config-prettier": "8.1.0",
     "eslint-plugin-cypress": "^2.10.3",
     "eslint-plugin-import": "2.26.0",
-    "eslint-plugin-jsx-a11y": "6.4.1",
+    "eslint-plugin-jsx-a11y": "6.5.1",
     "eslint-plugin-react": "7.29.4",
     "eslint-plugin-react-hooks": "4.5.0",
-    "prettier": "2.5.1",
-    "rimraf": "^3.0.2",
-    "rollup": "^2.41.2",
-    "rollup-plugin-copy": "3.4.0",
-    "rollup-plugin-node-resolve": "5.2.0",
-    "rollup-plugin-uglify": "6.0.4",
-    "rollup-plugin-commonjs": "10.1.0",
-    "rollup-plugin-peer-deps-external": "^2.2.4",
-    "rollup-plugin-sourcemaps": "^0.6.3",
-    "rollup-plugin-typescript2": "^0.30.0",
-    "ts-node": "~9.1.1",
-    "tslib": "^2.1.0",
-    "typescript": "4.3.5"
-  }
+    "jest": "27.5.1",
+    "nx": "14.1.7",
+    "prettier": "^2.5.1",
+    "react-test-renderer": "18.1.0",
+    "ts-jest": "27.1.4",
+    "ts-node": "9.1.1",
+    "typescript": "~4.6.2"
+  },
+  "workspaces": [
+    "packages/**"
+  ]
 }
-
