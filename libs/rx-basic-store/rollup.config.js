@@ -12,7 +12,8 @@ export default {
   output: {
     file: './dist/libs/rx-basic-store/index.js',
     sourcemap: true,
-    
+    name: 'rx-basic-store',
+    format: 'umd'
   },
   plugins: [
     peerDepsExternal(),

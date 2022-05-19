@@ -9,11 +9,8 @@ import {
   getFirestore as getFirestoreLib,
   setDoc,
 } from 'firebase/firestore';
-import { FirebaseOptions, initializeApp } from 'firebase/app';
-// let _functions: Functions;
-// let _firestore: Firestore;
-// let _storage: FirebaseStorage;
-// let _auth: Auth;
+import { FirebaseOptions, getApp, initializeApp } from 'firebase/app';
+
 let logActionOptions: SyncOptions;
 let firebaseOption: FirebaseOptions;
 let configuratedRegion: Region;
@@ -36,7 +33,7 @@ export interface StoreType<T> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   subscribe: (setState: (state: T) => void) => Subscription;
   asObservable: Observable<T>;
-  dispatch: (action: ActionType<T, unknown>) => Promise<T>;
+  dispatch: (action: ActionTypePartial<T>) => Promise<T>;
   currentState: () => T;
   overrideSyncOptions: (newSyncOptions: Partial<SyncOptions>) => void;
   addCallback: (
@@ -57,13 +54,13 @@ export interface ActionType<T, P> {
 }
 
 export interface StateContextType<T> {
-  functions: Functions;
+  functions: Functions & { baseUrl: string };
   firestore: Firestore;
   storage: FirebaseStorage;
   auth: Auth;
 
   getContext: <ContextType>(name: string) => ContextType;
-  dispatch: (action: ActionType<T, unknown>) => Promise<T>;
+  dispatch: (action: ActionTypePartial<T>) => Promise<T>;
   getState: () => T;
   store: (state: Partial<T>) => Promise<T>;
   storeCurrentState: () => Promise<T>;
@@ -134,7 +131,7 @@ export class StateContext<T> implements StateContextType<T> {
   ) {}
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  dispatch = (action: ActionType<T, unknown>) => action.execute(this as any); // trick compiler here
+  dispatch = (action: ActionTypePartial<T>) => action.execute(this as any) as Promise<T>; // trick compiler here
   getContext<T2>(name: string) {
     return storeContext.get(name) as T2;
   }
@@ -230,7 +227,8 @@ export class StateContext<T> implements StateContextType<T> {
 
   get functions() {
     const app = initializeApp(firebaseOption);
-    return getFunctionsLib(app, configuratedRegion);
+    const functionsLib = getFunctionsLib(app, configuratedRegion);
+    return {...functionsLib, baseUrl: `https://${functionsLib.region}-${firebaseOption.projectId}.cloudfunctions.net/` };
   }
 
   get firestore() {
@@ -249,6 +247,7 @@ export class StateContext<T> implements StateContextType<T> {
   }
 }
 
+type ActionTypePartial<T> = ActionType<Partial<T>, unknown>| ActionType<T, unknown>
 type getString = () => string;
 
 export interface SyncOptions {
@@ -284,8 +283,8 @@ export function createStore<T>(
   const store: StoreType<T> = {
     subscribe: (setState) => subject.subscribe(setState),
     asObservable: subject.asObservable(),
-    dispatch: async (action: ActionType<T, unknown>) => {
-      const newState = await action.execute(ctx);
+    dispatch: async (action: ActionTypePartial<T>) => {
+      const newState: T = (await action.execute(ctx as any)) as any;      // trick compiler here to be able to pass a partial of T
       if (devTools && devToolsDispacher) {
         devToolsDispacher(action, newState);
       }
@@ -326,7 +325,7 @@ export function createStore<T>(
     });
     if (!(syncOptions?.logAction === false)) {
       store.addCallback((action: ActionType<T, unknown>) => {
-        const app = initializeApp(firebaseOption);
+        const app = getApp() || initializeApp(firebaseOption);
         const auth = getAuthLib(app);
         const firestore = getFirestoreLib(app);
         if (action.neverStoreOrLog !== true && logActionOptions) {
@@ -374,7 +373,7 @@ export function createStore<T>(
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function storeState(newState: any, syncOptions: SyncOptions) {
-  const app = initializeApp(firebaseOption);
+  const app = getApp() || initializeApp(firebaseOption);
   const auth = getAuthLib(app);
   const firestore = getFirestoreLib(app);
 
