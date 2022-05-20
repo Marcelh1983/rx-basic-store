@@ -1,25 +1,33 @@
 import { BehaviorSubject } from 'rxjs';
-import { StateContextType, ActionTypePartial } from './types';
+import { DataApi } from './data-api';
+import { ActionType, StateContextType } from './types';
 
 export class StateContext<T> implements StateContextType<T> {
-
   constructor(
-    protected subject: BehaviorSubject<T>,
-    protected storeContext: Map<string, unknown>
-  ) {
+    private subject: BehaviorSubject<T>,
+    private storeContext: Map<string, unknown>,
+    private dataApi?: DataApi<T>
+  ) {}
 
-  }
+  restoreState = async () => {
+    if (this.dataApi) {
+      const restoredState = await this.dataApi.getState();
+      if (restoredState) {
+        return this.setState(restoredState);
+      }
+    }
+    return this.getState();
+  };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  dispatch = (action: ActionTypePartial<T>) =>
-    action.execute(this as any) as Promise<T>; // trick compiler here
+  dispatch<P>(action: ActionType<T, P>) {
+    return action.execute(this as any) as Promise<T>; // trick compiler here
+  }
 
   getContext<T2>(name: string) {
     return this.storeContext.get(name) as T2;
   }
-  setStoreContext = (
-    context: { name: string; dependency: unknown }[]
-  ) => {
+  setStoreContext = (context: { name: string; dependency: unknown }[]) => {
     context.forEach((c) => {
       if (this.storeContext.get(c.name)) {
         console.warn(

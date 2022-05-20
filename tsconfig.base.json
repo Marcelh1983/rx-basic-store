@@ -15,9 +15,7 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "react-firebase-store": ["packages/react-firebase-store/src/index.ts"],
-      "rx-basic-store": ["packages/rx-basic-store/src/index.ts"],
-      "rx-firebase-store": ["packages/rx-firebase-store/src/index.ts"]
+      "rx-basic-store": ["packages/rx-basic-store/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
