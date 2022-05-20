@@ -3,4 +3,12 @@
 
 export const environment = {
   production: false,
+  firebase: {
+    apiKey: "== API KEY ==",
+    authDomain: "== mydomain.firebaseapp.com ==",
+    projectId: "== my-project-id ==",
+    storageBucket: "== storage.appspot.com ==",
+    messagingSenderId: "== messageId ==",
+    appId: "== appId =="
+  }
 };

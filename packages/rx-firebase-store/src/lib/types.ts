@@ -3,15 +3,20 @@ import { Auth } from 'firebase/auth';
 import { FirebaseStorage } from 'firebase/storage';
 import { Firestore } from 'firebase/firestore';
 import {
-  ActionType as ActionTypeBase,
-  StoreType as StoreTypeBase,
+  ActionTypeBase,
+  StoreTypeBase,
   getString,
-  StateContextType as StateContextTypeBase,
+  StateContextTypeBase,
 } from 'rx-basic-store';
 
-export interface ActionType<T, P> extends ActionTypeBase<T, P> {
+export interface ActionType<T, P> extends ActionTypeBase<P> {
   neverStoreOrLog?: boolean;
+  execute: (ctx: StateContextType<T>) => Promise<T>
 }
+
+export type ActionTypePartial<T> =
+  | ActionType<Partial<T>, unknown>
+  | ActionType<T, unknown>;
 
 export interface SyncOptions {
   collectionStateName?: string | getString;
@@ -30,13 +35,22 @@ export interface StateContextType<T> extends StateContextTypeBase<T> {
   store: (state: Partial<T>) => Promise<T>;
   storeCurrentState: () => Promise<T>;
   restoreState: () => Promise<T>;
-
+  dispatch: (action: ActionTypePartial<T>) => Promise<T>;
   storeCustomState: (state: unknown) => void;
   getCustomState<T2>(): Promise<T2 | null>;
 }
 
 export interface StoreType<T> extends StoreTypeBase<T> {
   overrideSyncOptions: (newSyncOptions: Partial<SyncOptions>) => void;
+  dispatch: (action: ActionTypePartial<T>) => Promise<T>;
+  addCallback: (
+    callback: (
+      action: ActionType<T, unknown>,
+      oldState: T,
+      newState: T,
+      context: Map<string, unknown>
+    ) => void
+  ) => void;
 }
 
 export type Region =

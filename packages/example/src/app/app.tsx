@@ -1,13 +1,14 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Store, StoreType } from 'rx-basic-store';
+import { Store } from 'rx-firebase-store';
+import { environment } from '../environments/environment.prod';
 import { ClearFilterAction, FilterAction, LoadAction, initialState, StateModel } from './store';
 
 export function App() {
-  const store = useRef<StoreType<StateModel>>();
+  const store = useRef<Store<StateModel>>();
   const [state, setState] = useState(initialState);
 
   useEffect(() => {
-    store.current = new Store(initialState);
+    store.current = new Store(initialState, true, environment.firebase);
     const subs = store.current.subscribe(setState);
     store.current.dispatch(new LoadAction());
     return () => subs?.unsubscribe();

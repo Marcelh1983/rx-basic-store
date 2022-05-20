@@ -1,5 +1,10 @@
 import { BehaviorSubject } from 'rxjs';
-import { Region, StateContextType, SyncOptions } from './types';
+import {
+  ActionTypePartial,
+  Region,
+  StateContextType,
+  SyncOptions,
+} from './types';
 import { StateContext as StateContextBase } from 'rx-basic-store';
 import { FirebaseOptions, FirebaseApp, initializeApp } from '@firebase/app';
 import { getFunctions as getFunctionsLib } from '@firebase/functions';
@@ -86,19 +91,22 @@ export class StateContext<T>
     if (this.syncOptions?.collectionStateName) {
       return this.storeState(state, this.syncOptions as unknown as SyncOptions);
     } else {
-      return Promise.resolve(this.ctx.getValue());
+      return Promise.resolve(this.subject.getValue());
     }
   };
   storeCurrentState = () => {
     if (this.syncOptions?.collectionStateName) {
       return this.storeState(
-        this.ctx.getValue(),
+        this.subject.getValue(),
         this.syncOptions as unknown as SyncOptions
       );
     } else {
-      return Promise.resolve(this.ctx.getValue());
+      return Promise.resolve(this.subject.getValue());
     }
   };
+
+  dispatch = (action: ActionTypePartial<T>) =>
+    action.execute(this as any) as Promise<T>; // trick compiler here
 
   public async storeState(newState: any, syncOptions: SyncOptions) {
     const auth = getAuthLib(this.app);

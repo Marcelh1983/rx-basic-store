@@ -1,21 +1,12 @@
 import { FirebaseApp, FirebaseOptions, initializeApp } from 'firebase/app';
 import { BehaviorSubject } from 'rxjs';
 import { StateContext } from './context';
-import { ActionType, Region, StoreType, SyncOptions } from './types';
-import { ActionTypePartial, Store as StoreBase } from 'rx-basic-store';
+import { ActionType, Region, StoreType, SyncOptions, ActionTypePartial } from './types';
+import { Store as StoreBase } from 'rx-basic-store';
 import { getAuth as getAuthLib } from '@firebase/auth';
 import { getFirestore as getFirestoreLib } from '@firebase/firestore';
 import { doc, setDoc } from 'firebase/firestore';
 import { dateId, getCollectionName } from './utils';
-
-const defaultSyncOptions: SyncOptions = {
-  addUserId: true,
-  autoStore: true,
-  collectionStateName: 'state',
-  collectionActionName: 'actions',
-  excludedFields: [],
-  logAction: true,
-};
 
 export class Store<T> implements StoreType<T> {
   private subject!: BehaviorSubject<T>;
@@ -28,7 +19,14 @@ export class Store<T> implements StoreType<T> {
     initialState: T,
     devTools = false,
     private firebaseOptions: FirebaseOptions,
-    private syncOptions = defaultSyncOptions,
+    private syncOptions: SyncOptions = {
+      addUserId: true,
+      autoStore: true,
+      collectionStateName: 'state',
+      collectionActionName: 'actions',
+      excludedFields: [],
+      logAction: true,
+    },
     private region: Region = 'europe-west1'
   ) {
     this.baseStore = new StoreBase(initialState, devTools);
@@ -100,7 +98,8 @@ export class Store<T> implements StoreType<T> {
   public asObservable = () => this.subject.asObservable();
 
   public dispatch = async (action: ActionTypePartial<T>): Promise<T> => {
-    return this.baseStore.dispatch(action);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return this.baseStore.dispatch(action as any); // trick the compiler and pass the action.
   };
 
   public currentState = () => this.ctx.getState();
@@ -113,7 +112,8 @@ export class Store<T> implements StoreType<T> {
       context: Map<string, unknown>
     ) => void
   ) {
-    this.baseStore.addCallback(callback);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    this.baseStore.addCallback(callback as any); // ignore the compiler, just pass it
   }
 
   public overrideSyncOptions = (newSyncOptions: Partial<SyncOptions>) => {
