@@ -32,7 +32,7 @@ export class Store<T> implements StoreType<T> {
             this.storeAction(action);
           }
           if (action.neverStoreOrLog !== false) {
-            this.dataApi?.setState(newState);
+            this.storeState(newState);;
           }
         });
       }
@@ -99,7 +99,7 @@ export class Store<T> implements StoreType<T> {
   storeState = (state: T) => {
     let untypedState = state as any;
     if (this.dataApi) {
-      const actionSyncOptions = this.dataApi.syncOptions?.actions;
+      const actionSyncOptions = this.dataApi.syncOptions?.state;
       if (actionSyncOptions && actionSyncOptions.sync) {
         const currentUserId = this.dataApi.getUserId();
         if (!untypedState['lastModified']) {

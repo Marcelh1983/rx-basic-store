@@ -40,7 +40,7 @@ export interface StoreSyncOptions {
 
 export interface SyncOptions {
   sync: boolean;
-  collectionName: string;
-  addUserId: boolean;
+  collectionName?: string;
+  addUserId?: boolean;
   excludedFields?: Array<string>;
 }

@@ -4,6 +4,7 @@
   "license": "MIT",
   "scripts": {
     "nx": "nx",
+    "test": "nx test rx-basic-store",
     "start:example": "nx serve example",
     "build:rx-basic-store": "nx build rx-basic-store",
     "build:rx-firebase-store": "nx build rx-firebase-store",

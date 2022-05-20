@@ -1,3 +1,4 @@
+import { MockedDataApi } from './mocked-api.test';
 import { Store } from './store';
 import { ActionType, StateContextType } from './types';
 
@@ -6,6 +7,27 @@ interface StateModel {
   users: string[];
 }
 
+const syncAll = {
+  actions: {
+    addUserId: true,
+    collectionName: 'actions',
+    sync: true,
+  },
+  state: {
+    addUserId: true,
+    collectionName: 'state',
+    sync: true,
+  },
+};
+
+const syncNone = {
+  actions: {
+    sync: false,
+  },
+  state: {
+    sync: false,
+  },
+};
 interface ExtendedStateModel extends StateModel {
   extra: boolean;
 }
@@ -71,15 +93,53 @@ describe(`rx-basic-store`, () => {
 
   it('can work with extended classes', async () => {
     const extInitialState = { ...initialState, extra: true };
-    const store = new Store<ExtendedStateModel>(
-      extInitialState,
-      false
-    );
+    const store = new Store<ExtendedStateModel>(extInitialState, false);
     expect(store.currentState()).toEqual(extInitialState);
     const currentState = await store.dispatch(new LoadAction());
 
     expect(currentState.loading).toEqual(false);
     expect(currentState.users.length).toEqual(2);
     expect(currentState.extra).toEqual(true);
+  });
+
+  it('data api stores state', async () => {
+    const dataApi = new MockedDataApi<StateModel>(
+      syncAll,
+      'user-123',
+      initialState
+    );
+    const mock = jest.spyOn(dataApi, 'setState');
+    const store = new Store<StateModel>(initialState, false, dataApi);
+    const currentState = await store.dispatch(new LoadAction());
+
+    expect(currentState.loading).toEqual(false);
+    expect(currentState.users.length).toEqual(2);
+    expect(mock).toHaveBeenCalledTimes(1);
+  });
+
+  it('data api adds user id', async () => {
+    const userId = 'user-123';
+    const dataApi = new MockedDataApi<StateModel>(
+      syncAll,
+      userId,
+      initialState
+    );
+    // const mock = jest.spyOn(dataApi, 'setState');
+    const store = new Store<StateModel>(initialState, false, dataApi);
+    await store.dispatch(new LoadAction());
+    expect((dataApi.latestState as any)['createdBy']).toEqual(userId);
+  });
+
+  it('data api does not add user id', async () => {
+    const userId = 'user-123';
+    const dataApi = new MockedDataApi<StateModel>(
+      { ...syncAll, state: { ...syncAll.state, addUserId: false } },
+      userId,
+      initialState
+    );
+    // const mock = jest.spyOn(dataApi, 'setState');
+    const store = new Store<StateModel>(initialState, false, dataApi);
+    await store.dispatch(new LoadAction());
+    expect((dataApi.latestState as any)['createdBy']).toEqual(undefined);
   });
 });
