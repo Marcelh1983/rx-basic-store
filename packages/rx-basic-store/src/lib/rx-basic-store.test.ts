@@ -1,6 +1,6 @@
-import { MockedDataApi } from './mocked-api.test';
+import { DataApi } from './data-api';
 import { Store } from './store';
-import { ActionType, StateContextType } from './types';
+import { ActionType, StateContextType, StoreSyncOptions } from './types';
 
 interface StateModel {
   loading: boolean;
@@ -143,3 +143,30 @@ describe(`rx-basic-store`, () => {
     expect((dataApi.latestState as any)['createdBy']).toEqual(undefined);
   });
 });
+
+
+// HELPER CLASSES
+export class MockedDataApi<T> implements DataApi<T> {
+  userId: string;
+  latestState: T;
+  
+  private actions: ActionType<T, unknown>[] = [];
+  
+  constructor(public syncOptions: StoreSyncOptions, userId: string, initialState: T) {
+    this.userId = userId;
+    this.latestState = initialState;
+  }
+
+  getUserId = () => this.userId;
+
+  getState = () => Promise.resolve(this.latestState);
+
+  setState = (doc: T) => {
+    this.latestState = doc;
+    return Promise.resolve();
+  };
+
+  storeAction<P>(action: ActionType<T, P>): void {
+    this.actions.push(action);
+  }
+}
