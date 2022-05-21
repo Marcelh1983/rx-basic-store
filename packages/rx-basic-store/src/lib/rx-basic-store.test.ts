@@ -51,7 +51,26 @@ class LoadAction<T extends StateModel> implements ActionType<T, never> {
     return currentState;
   }
 }
+class SomeAction<T extends StateModel>
+  implements ActionType<T, { included: string; excluded: string }>
+{
+  type = 'SOME';
 
+  constructor(public payload: { included: string; excluded: string }) {}
+
+  async execute(ctx: StateContextType<T>): Promise<T> {
+    const currentState = ctx.getState();
+    if (currentState.users.length === 0) {
+      // help the compiler a bit with types
+      const patchedState: Partial<StateModel> = {
+        loading: false,
+        users: ['user1', 'user2'],
+      };
+      return await ctx.patchState(patchedState as T);
+    }
+    return currentState;
+  }
+}
 describe(`rx-basic-store`, () => {
   it('initial state set', async () => {
     const store = new Store<StateModel>(initialState, false);
@@ -145,7 +164,11 @@ describe(`rx-basic-store`, () => {
 
   it('data api actions are stored', async () => {
     const userId = 'user-123';
-    const dataApi = new MockedDataApi<StateModel>(syncAll, userId, initialState);
+    const dataApi = new MockedDataApi<StateModel>(
+      syncAll,
+      userId,
+      initialState
+    );
     const store = new Store<StateModel>(initialState, false, dataApi);
     await store.dispatch(new LoadAction());
     expect(dataApi.actions.length).toEqual(1);
@@ -153,7 +176,11 @@ describe(`rx-basic-store`, () => {
 
   it('data api actions userId added', async () => {
     const userId = 'user-123';
-    const dataApi = new MockedDataApi<StateModel>(syncAll, userId, initialState);
+    const dataApi = new MockedDataApi<StateModel>(
+      syncAll,
+      userId,
+      initialState
+    );
     const store = new Store<StateModel>(initialState, false, dataApi);
     await store.dispatch(new LoadAction());
     expect((dataApi.actions[0] as any)['createdBy']).toEqual(userId);
@@ -161,7 +188,11 @@ describe(`rx-basic-store`, () => {
 
   it('data api actions time added', async () => {
     const userId = 'user-123';
-    const dataApi = new MockedDataApi<StateModel>(syncAll, userId, initialState);
+    const dataApi = new MockedDataApi<StateModel>(
+      syncAll,
+      userId,
+      initialState
+    );
     const store = new Store<StateModel>(initialState, false, dataApi);
     await store.dispatch(new LoadAction());
     expect((dataApi.actions[0] as any)['time']).toBeDefined();
@@ -169,7 +200,11 @@ describe(`rx-basic-store`, () => {
 
   it('data api actions not added', async () => {
     const userId = 'user-123';
-    const dataApi = new MockedDataApi<StateModel>(syncNone, userId, initialState);
+    const dataApi = new MockedDataApi<StateModel>(
+      syncNone,
+      userId,
+      initialState
+    );
     const store = new Store<StateModel>(initialState, false, dataApi);
     await store.dispatch(new LoadAction());
     expect(dataApi.actions.length).toEqual(0);
@@ -177,21 +212,60 @@ describe(`rx-basic-store`, () => {
 
   it('data api actions created not added added', async () => {
     const userId = 'user-123';
-    const dataApi = new MockedDataApi<StateModel>({...syncAll, actions: { ...syncAll.actions, addUserId: false } }, userId, initialState);
+    const dataApi = new MockedDataApi<StateModel>(
+      { ...syncAll, actions: { ...syncAll.actions, addUserId: false } },
+      userId,
+      initialState
+    );
     const store = new Store<StateModel>(initialState, false, dataApi);
     await store.dispatch(new LoadAction());
     expect((dataApi.actions[0] as any)['createdBy']).toBeUndefined();
   });
-});
 
+  it('data api state field is excluded', async () => {
+    const userId = 'user-123';
+    const dataApi = new MockedDataApi<StateModel>(
+      {
+        ...syncAll,
+        actions: { ...syncAll.state, excludedFields: ['loading'] },
+      },
+      userId,
+      initialState
+    );
+    const store = new Store<StateModel>(initialState, false, dataApi);
+    await store.dispatch(new LoadAction());
+    expect((dataApi.latestState as any)['loaded']).toBeUndefined();
+    expect((dataApi.latestState.users.length)).toEqual(2);
+  });
+
+  it('data api action field is excluded', async () => {
+    const userId = 'user-123';
+    const dataApi = new MockedDataApi<StateModel>(
+      {
+        ...syncAll,
+        actions: { ...syncAll.state, excludedFields: ['excluded'] },
+      },
+      userId,
+      initialState
+    );
+    const store = new Store<StateModel>(initialState, false, dataApi);
+    await store.dispatch(new SomeAction({ included: 'yup', excluded: 'yup '}));
+    expect((dataApi.actions[0].payload as any)['excluded']).toBeUndefined();
+    expect((dataApi.actions[0].payload as any)['included']).toEqual('yup');
+  });
+});
 
 // HELPER CLASSES
 export class MockedDataApi<T> implements DataApi<T> {
   userId: string;
   latestState: T;
   actions: ActionType<T, unknown>[] = [];
-  
-  constructor(public syncOptions: StoreSyncOptions, userId: string, initialState: T) {
+
+  constructor(
+    public syncOptions: StoreSyncOptions,
+    userId: string,
+    initialState: T
+  ) {
     this.userId = userId;
     this.latestState = initialState;
   }

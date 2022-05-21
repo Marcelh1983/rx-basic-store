@@ -86,9 +86,9 @@ export class Store<T> implements StoreType<T> {
         if (actionSyncOptions.addUserId && !untypedAction['createdBy']) {
           untypedAction = { ...untypedAction, createdBy: currentUserId };
         }
-        if (actionSyncOptions.excludedFields) {
+        if (actionSyncOptions.excludedFields && untypedAction['payload']) {
           for (const excludedField of actionSyncOptions.excludedFields) {
-            delete untypedAction[excludedField];
+            delete untypedAction['payload'][excludedField];
           }
         }
         this.dataApi.storeAction(untypedAction);
