@@ -9,8 +9,6 @@ Created to seperate state management from the UI components without a lot of boi
 Inspired by this [blog](https://blog.logrocket.com/rxjs-with-react-hooks-for-state-management/) and the names of the events
 are inspired by [ngxs](https://www.ngxs.io)
 
-
-
 ## Examples
 
 Here a [demo](https://rx-basic-store.web.app/) and the [code](https://github.com/Marcelh1983/rx-basic-store/tree/main/apps/example) 
@@ -64,6 +62,7 @@ ctx: StateContext<StateModel>
 - ```getState```: gets the current state.
 - ```setState```: set the entire new state.
 - ```patchState```: set only the changed properties of the state, these will be merged with the current state.
+- ```dataApi```: the data api that is passed. Can be casted to the used implementation.
 
 dataApi: Optionally you can pass a dataApi implementation to automatically store the state. Examples can be found [here](https://github.com/Marcelh1983/rx-basic-store/tree/main/packages/example/src/app/api-examples).
 -  ```syncOptions```
@@ -93,5 +92,5 @@ dataApi: Optionally you can pass a dataApi implementation to automatically store
 In the action you can use: 
 
 ```typescript
-  const history = ctx.getContext<History>('history');
+  const auth = ctx.getContext<History>('auth');
 ```

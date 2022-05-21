@@ -1,4 +1,5 @@
 import { Observable, Subscription } from 'rxjs';
+import { DataApi } from './data-api';
 
 
 export interface ActionType<T, P> {
@@ -15,6 +16,8 @@ export interface StateContextType<T> {
   setState: (state: T) => Promise<T>;
   patchState: (state: Partial<T>) => Promise<T>;
   dispatch<P> (action: ActionType<T, P>): Promise<T>; 
+
+  dataApi?: DataApi<T>;
 }
 
 export interface StoreType<T> {

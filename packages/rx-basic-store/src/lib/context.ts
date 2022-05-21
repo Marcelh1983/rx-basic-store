@@ -6,7 +6,7 @@ export class StateContext<T> implements StateContextType<T> {
   constructor(
     private subject: BehaviorSubject<T>,
     private storeContext: Map<string, unknown>,
-    private dataApi?: DataApi<T>
+    public dataApi?: DataApi<T>
   ) {}
 
   restoreState = async () => {

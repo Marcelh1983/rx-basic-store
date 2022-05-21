@@ -1,24 +1,33 @@
 import { DataApi, StoreSyncOptions } from 'rx-basic-store';
 import { FirebaseOptions, FirebaseApp, initializeApp } from '@firebase/app';
-import { getAuth } from '@firebase/auth';
-import { getFirestore, doc, getDoc, setDoc } from '@firebase/firestore';
+import { getAuth, Auth } from '@firebase/auth';
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc,
+  Firestore,
+} from '@firebase/firestore';
 
 export class FirebaseApi<T> implements DataApi<T> {
   private app!: FirebaseApp;
+  public auth!: Auth;
+  public firestore!: Firestore;
 
   constructor(
     public syncOptions: StoreSyncOptions,
     public firebaseOptions: FirebaseOptions
   ) {
     this.app = initializeApp(this.firebaseOptions);
+    this.auth = getAuth(this.app);
+    this.firestore = getFirestore(this.app);
   }
 
   getUserId = () => {
-    const auth = getAuth(this.app);
-    if (!auth) {
+    if (!this.auth) {
       console.error('cannot store state if firebase auth is not configured.');
     }
-    return auth?.currentUser?.uid || '';
+    return this.auth?.currentUser?.uid || '';
   };
 
   getState = async () => {
@@ -32,25 +41,17 @@ export class FirebaseApi<T> implements DataApi<T> {
     return await setDoc(stateRef, document);
   };
 
- 
   storeAction = async (action: any) => {
-    const collectionName = this.syncOptions?.actions?.collectionName || 'actions';
-    const firestore = getFirestore(this.app);
-    const actionRef = await doc(
-      firestore,
-      `${collectionName}/${dateId()}`
-    );
+    const collectionName =
+      this.syncOptions?.actions?.collectionName || 'actions';
+    const actionRef = await doc(this.firestore, `${collectionName}/${dateId()}`);
     return setDoc(actionRef, action);
   };
 
   getStateRef = async () => {
     const collectionName = this.syncOptions?.state?.collectionName || 'state';
-    const firestore = getFirestore(this.app);
     const userId = this.getUserId();
-    return await doc(
-      firestore,
-      `${collectionName}/${userId}`
-    );
+    return await doc(this.firestore, `${collectionName}/${userId}`);
   };
 }
 
