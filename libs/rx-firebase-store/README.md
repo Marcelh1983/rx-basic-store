@@ -1,3 +1,8 @@
+# === deprecated ===
+
+This package is deprecated. rx-basic-store can be used with a firebase dataApi. 
+An example can be found [here](https://github.com/Marcelh1983/rx-basic-store/blob/main/packages/example/src/app/api-examples/firebase-api.ts)
+
 # rx-firebase-store
 
 Auto store state using a simple reactive store with state management using RxJs. 
