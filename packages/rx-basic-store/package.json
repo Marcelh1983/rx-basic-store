@@ -1,11 +1,6 @@
 {
-<<<<<<< HEAD:libs/rx-firebase-store/package.json
-    "name": "rx-firebase-store",
-    "version": "1.2.2",
-=======
     "name": "rx-basic-store",
-    "version": "2.0.0-beta.1",
->>>>>>> classbased:packages/rx-basic-store/package.json
+    "version": "2.0.0",
     "license": "MIT",
     "author": {
       "name": "Marcel Hoekstra"
