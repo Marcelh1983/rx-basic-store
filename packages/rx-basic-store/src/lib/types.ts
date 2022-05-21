@@ -4,7 +4,8 @@ import { DataApi } from './data-api';
 
 export interface ActionType<T, P> {
   type: string;
-  neverStoreOrLog?: boolean;
+  storeAction?: boolean;
+  storeState?: boolean;
   payload?: P;
   execute: (ctx: StateContextType<T>) => Promise<T>;
 }

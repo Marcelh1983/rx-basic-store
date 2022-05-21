@@ -51,6 +51,22 @@ class LoadAction<T extends StateModel> implements ActionType<T, never> {
     return currentState;
   }
 }
+class LoadButDontStoreAction<T extends StateModel> implements ActionType<T, never> {
+  storeAction = false;
+  type = 'LOAD';
+  async execute(ctx: StateContextType<T>): Promise<T> {
+    const currentState = ctx.getState();
+    if (currentState.users.length === 0) {
+      // help the compiler a bit with types
+      const patchedState: Partial<StateModel> = {
+        loading: false,
+        users: ['user1', 'user2'],
+      };
+      return await ctx.patchState(patchedState as T);
+    }
+    return currentState;
+  }
+}
 class SomeAction<T extends StateModel>
   implements ActionType<T, { included: string; excluded: string }>
 {
@@ -172,6 +188,18 @@ describe(`rx-basic-store`, () => {
     const store = new Store<StateModel>(initialState, false, dataApi);
     await store.dispatch(new LoadAction());
     expect(dataApi.actions.length).toEqual(1);
+  });
+
+  it('data api never store or log on action works', async () => {
+    const userId = 'user-123';
+    const dataApi = new MockedDataApi<StateModel>(
+      syncAll,
+      userId,
+      initialState
+    );
+    const store = new Store<StateModel>(initialState, false, dataApi);
+    await store.dispatch(new LoadButDontStoreAction());
+    expect(dataApi.actions.length).toEqual(0);
   });
 
   it('data api actions userId added', async () => {

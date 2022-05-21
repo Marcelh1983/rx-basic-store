@@ -63,6 +63,8 @@ ctx: StateContext<StateModel>
 - ```setState```: set the entire new state.
 - ```patchState```: set only the changed properties of the state, these will be merged with the current state.
 - ```dataApi```: the data api that is passed. Can be casted to the used implementation.
+- ```storeAction``: default: true, if a specific action should not be logged it can be overridden by setting this property to false
+- ```storeState``: default: true, if a specific action should not result in a stored state it can be overridden by setting this property to false
 
 dataApi: Optionally you can pass a dataApi implementation to automatically store the state. Examples can be found [here](https://github.com/Marcelh1983/rx-basic-store/tree/main/packages/example/src/app/api-examples).
 -  ```syncOptions```

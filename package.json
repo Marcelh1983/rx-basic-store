@@ -6,8 +6,10 @@
     "nx": "nx",
     "test": "nx test rx-basic-store",
     "start:example": "nx serve example",
+    "deploy:example": "firebase deploy",
     "build:rx-basic-store": "nx build rx-basic-store",
-    "publish:next:rx-basic-store": "npm run build:rx-basic-store && npm publish ./dist/packages/rx-basic-store --tag next"
+    "publish:next:rx-basic-store": "npm run build:rx-basic-store && npm publish ./dist/packages/rx-basic-store --tag next",
+    "publish:latest:rx-basic-store": "npm run build:rx-basic-store && npm publish ./dist/packages/rx-basic-store --tag latest"
   },
   "private": true,
   "dependencies": {
