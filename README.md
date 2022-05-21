@@ -1,7 +1,9 @@
 # rx-basic-store
 
-A simple reactive store for state management using RxJs. 
-Can be used in React but will also work with other frameworks.
+A simple reactive store for state management using RxJs.
+Can synchronize state automatically to the database by implementing the IDataApi interface.
+
+Can be used in React and Angular and other frameworks.
 
 Created to seperate state management from the UI components without a lot of boilerplate code.
 
@@ -10,7 +12,7 @@ are inspired by [ngxs](https://www.ngxs.io)
 
 ## rx-basic-store
 
-[rx-basic-store](libs/rx-basic-store)
+[rx-basic-store](packages/rx-basic-store)
 
 ## rx-firebase-store
-[rx-firebase-store](libs/rx-firebase-store)
+this package is deprecated. To have the same result you can use rx-basic-store with a firebase dataApi. With can be found [here](packages/example/src/app/api-examples/firebase-api.ts).
