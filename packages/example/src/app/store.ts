@@ -1,5 +1,5 @@
 import { ApiResponse, User } from './model';
-import { ActionType, StateContextType } from 'rx-firebase-store';
+import { ActionType, StateContextType } from 'rx-basic-store';
 
 export type genderType = 'none' | 'female' | 'male' | 'other';
 export interface StateModel {
@@ -43,7 +43,7 @@ export class FilterAction
     await ctx.dispatch(new ClearFilterAction());
     return ctx.patchState({
       genderFilter: this.payload.gender,
-      filter: (user) => user.gender === this.payload.gender,
+      filter: (u: User) => u?.gender === this.payload.gender,
     });
   }
 }

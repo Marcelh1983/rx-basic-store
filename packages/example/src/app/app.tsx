@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Store } from 'rx-firebase-store';
-import { environment } from '../environments/environment.prod';
+import { Store } from 'rx-basic-store';
 import { ClearFilterAction, FilterAction, LoadAction, initialState, StateModel } from './store';
 
 export function App() {
@@ -8,7 +7,7 @@ export function App() {
   const [state, setState] = useState(initialState);
 
   useEffect(() => {
-    store.current = new Store(initialState, true, environment.firebase);
+    store.current = new Store(initialState, true);
     const subs = store.current.subscribe(setState);
     store.current.dispatch(new LoadAction());
     return () => subs?.unsubscribe();
