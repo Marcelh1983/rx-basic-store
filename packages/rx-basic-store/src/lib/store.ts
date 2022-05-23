@@ -76,7 +76,7 @@ export class Store<T> implements StoreType<T> {
   }
 
   storeAction = (action: ActionType<T, unknown>) => {
-    let untypedAction = action as any;
+    let untypedAction = {...action} as any;
     if (this.dataApi) {
       const actionSyncOptions = this.dataApi.syncOptions?.actions;
       if (actionSyncOptions && actionSyncOptions.sync) {
@@ -98,19 +98,19 @@ export class Store<T> implements StoreType<T> {
   };
 
   storeState = (state: T) => {
-    let untypedState = state as any;
+    let untypedState = {...state} as any;
     if (this.dataApi) {
-      const actionSyncOptions = this.dataApi.syncOptions?.state;
-      if (actionSyncOptions && actionSyncOptions.sync) {
+      const stateSyncOptions = this.dataApi.syncOptions?.state;
+      if (stateSyncOptions && stateSyncOptions.sync) {
         const currentUserId = this.dataApi.getUserId();
         if (!untypedState['lastModified']) {
           untypedState = { ...untypedState, lastModified: new Date().getTime() };
         }
-        if (actionSyncOptions.addUserId && !untypedState['createdBy']) {
+        if (stateSyncOptions.addUserId && !untypedState['createdBy']) {
           untypedState = { ...untypedState, createdBy: currentUserId };
         }
-        if (actionSyncOptions.excludedFields) {
-          for (const excludedField of actionSyncOptions.excludedFields) {
+        if (stateSyncOptions.excludedFields) {
+          for (const excludedField of stateSyncOptions.excludedFields) {
             delete untypedState[excludedField];
           }
         }

@@ -255,15 +255,31 @@ describe(`rx-basic-store`, () => {
     const dataApi = new MockedDataApi<StateModel>(
       {
         ...syncAll,
-        actions: { ...syncAll.state, excludedFields: ['loading'] },
+        state: { ...syncAll.state, excludedFields: ['loading'] },
       },
       userId,
       initialState
     );
     const store = new Store<StateModel>(initialState, false, dataApi);
     await store.dispatch(new LoadAction());
-    expect((dataApi.latestState as any)['loaded']).toBeUndefined();
+    expect((dataApi.latestState as any)['loading']).toBeUndefined();
     expect((dataApi.latestState.users.length)).toEqual(2);
+  });
+
+  it('data api excluded field must only be excluded in dataApi not in actual state', async () => {
+    const userId = 'user-123';
+    const dataApi = new MockedDataApi<StateModel>(
+      {
+        ...syncAll,
+        state: { ...syncAll.state, excludedFields: ['loading'] },
+      },
+      userId,
+      initialState
+    );
+    const store = new Store<StateModel>(initialState, false, dataApi);
+    const state = await store.dispatch(new LoadAction());
+    expect((dataApi.latestState as any)['loading']).toBeUndefined();
+    expect(state.loading).toBeDefined();
   });
 
   it('data api action field is excluded', async () => {
