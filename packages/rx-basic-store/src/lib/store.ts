@@ -2,13 +2,13 @@ import { BehaviorSubject } from 'rxjs';
 import { StateContext } from './context';
 import { DataApi } from './data-api';
 import { StoreType, ActionType } from './types';
-import { IsNullOrUndefined } from './utils';
+import { IsNullOrUndefined, getDevToolsDispatcher } from './utils';
 
 export class Store<T> implements StoreType<T> {
   public ctx!: StateContext<T>;
 
   protected subject!: BehaviorSubject<T>;
-  protected devToolsDispacher: any = null;
+  protected devToolsDispacher: any;
   protected storeContext = new Map<string, unknown>();
   protected callbacks: ((
     action: ActionType<T, unknown>,
@@ -29,7 +29,7 @@ export class Store<T> implements StoreType<T> {
       if (this.dataApi.syncOptions.state?.sync) {
         // add callback to sync data to database
         this.addCallback((action, _, newState) => {
-          if (IsNullOrUndefined(action.storeAction) || action.storeAction !== false) {
+          if (IsNullOrUndefined(action.storeAction) ||  action.storeAction !== false) {
             this.storeAction(action);
           }
           if (IsNullOrUndefined(action.storeState) || action.storeState !== false) {
@@ -48,8 +48,13 @@ export class Store<T> implements StoreType<T> {
   public async dispatch<P>(action: ActionType<T, P>): Promise<T> {
     const oldState = this.currentState();
     const newState =  await action.execute(this.ctx);
-    if (this.devTools && this.devToolsDispacher) {
-      this.devToolsDispacher(action, newState);
+    if (this.devTools) {
+      if (!this.devToolsDispacher) {
+        this.devToolsDispacher = getDevToolsDispatcher(oldState);
+      }
+      if (this.devToolsDispacher) {
+        this.devToolsDispacher(action, newState);
+      }
     }
     for (const callback of this.callbacks) {
       callback(
