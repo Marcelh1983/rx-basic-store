@@ -6,6 +6,7 @@ import { IsNullOrUndefined, getDevToolsDispatcher } from './utils';
 
 export class Store<T> implements StoreType<T> {
   public ctx!: StateContext<T>;
+  
 
   protected subject!: BehaviorSubject<T>;
   protected devToolsDispacher: any;
@@ -23,7 +24,7 @@ export class Store<T> implements StoreType<T> {
     private dataApi?: DataApi<T>
   ) {
     this.subject = new BehaviorSubject<T>(initialState);
-    this.ctx = new StateContext<T>(this.subject, this.storeContext, dataApi);
+    this.ctx = new StateContext<T>(this.subject, this.storeContext, initialState, dataApi);
 
     if (this.dataApi?.syncOptions) {
       if (this.dataApi.syncOptions.state?.sync) {

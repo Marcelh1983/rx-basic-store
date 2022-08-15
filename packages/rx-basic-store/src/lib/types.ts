@@ -18,6 +18,7 @@ export interface StateContextType<T> {
   patchState: (state: Partial<T>) => Promise<T>;
   dispatch<P> (action: ActionType<T, P>): Promise<T>; 
 
+  initialState: T;
   dataApi?: DataApi<T>;
 }
 
