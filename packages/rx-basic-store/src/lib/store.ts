@@ -30,12 +30,12 @@ export class Store<T> implements StoreType<T> {
       if (this.dataApi.syncOptions.state?.sync) {
         // add callback to sync data to database
         this.addCallback((action, _, newState) => {
-          if (IsNullOrUndefined(action.storeAction) ||  action.storeAction !== false) {
-            this.storeAction(action);
-          }
-          if (IsNullOrUndefined(action.storeState) || action.storeState !== false) {
-            this.storeState(newState);;
-          }
+            if (IsNullOrUndefined(action.storeAction) ||  action.storeAction !== false) {
+              this.storeAction(action);
+            }
+            if (IsNullOrUndefined(action.storeState) || action.storeState !== false) {
+              this.storeState(newState);;
+            }    
         });
       }
     }
@@ -57,13 +57,15 @@ export class Store<T> implements StoreType<T> {
         this.devToolsDispacher(action, newState);
       }
     }
-    for (const callback of this.callbacks) {
-      callback(
-        JSON.parse(JSON.stringify(action)) as ActionType<T, P>,
-        oldState,
-        newState,
-        this.storeContext
-      );
+    if (!action.neverStoreOrLog) {
+      for (const callback of this.callbacks) {
+        callback(
+          JSON.parse(JSON.stringify(action)) as ActionType<T, P>,
+          oldState,
+          newState,
+          this.storeContext
+        );
+      }
     }
     return newState;
   }

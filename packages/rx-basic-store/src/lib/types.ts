@@ -6,6 +6,7 @@ export interface ActionType<T, P> {
   type: string;
   storeAction?: boolean;
   storeState?: boolean;
+  neverStoreOrLog?: boolean;
   payload?: P;
   execute: (ctx: StateContextType<T>) => Promise<T>;
 }
