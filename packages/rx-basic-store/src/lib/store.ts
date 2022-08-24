@@ -2,12 +2,10 @@ import { BehaviorSubject } from 'rxjs';
 import { StateContext } from './context';
 import { DataApi } from './data-api';
 import { StoreType, ActionType } from './types';
-import { IsNullOrUndefined, getDevToolsDispatcher } from './utils';
+import { getDevToolsDispatcher } from './utils';
 
 export class Store<T> implements StoreType<T> {
   public ctx!: StateContext<T>;
-  
-
   protected subject!: BehaviorSubject<T>;
   protected devToolsDispacher: any;
   protected storeContext = new Map<string, unknown>();
@@ -24,21 +22,13 @@ export class Store<T> implements StoreType<T> {
     private dataApi?: DataApi<T>
   ) {
     this.subject = new BehaviorSubject<T>(initialState);
-    this.ctx = new StateContext<T>(this.subject, this.storeContext, initialState, dataApi);
-
-    if (this.dataApi?.syncOptions) {
-      if (this.dataApi.syncOptions.state?.sync) {
-        // add callback to sync data to database
-        this.addCallback((action, _, newState) => {
-            if (IsNullOrUndefined(action.storeAction) ||  action.storeAction !== false) {
-              this.storeAction(action);
-            }
-            if (IsNullOrUndefined(action.storeState) || action.storeState !== false) {
-              this.storeState(newState);;
-            }    
-        });
-      }
-    }
+    this.ctx = new StateContext<T>(
+      this.subject,
+      this.storeContext,
+      initialState,
+      dataApi
+    );
+  
   }
 
   public subscribe = (setState: (state: T) => void) =>
@@ -48,7 +38,7 @@ export class Store<T> implements StoreType<T> {
 
   public async dispatch<P>(action: ActionType<T, P>): Promise<T> {
     const oldState = this.currentState();
-    const newState =  await action.execute(this.ctx);
+    const newState = await action.execute(this.ctx);
     if (this.devTools) {
       if (!this.devToolsDispacher) {
         this.devToolsDispacher = getDevToolsDispatcher(oldState);
@@ -57,14 +47,17 @@ export class Store<T> implements StoreType<T> {
         this.devToolsDispacher(action, newState);
       }
     }
+    
+    if (this.callbacks?.length > 0) {
+      this.handleActionCallbacks(action, oldState, newState);
+    }
+
     if (!action.neverStoreOrLog) {
-      for (const callback of this.callbacks) {
-        callback(
-          JSON.parse(JSON.stringify(action)) as ActionType<T, P>,
-          oldState,
-          newState,
-          this.storeContext
-        );
+      if (this.dataApi && this.dataApi.syncOptions.actions?.sync) {
+        this.storeAction(action);
+      }
+      if (this.dataApi && this.dataApi.syncOptions.state?.sync) {
+        await this.storeState(newState);
       }
     }
     return newState;
@@ -84,7 +77,7 @@ export class Store<T> implements StoreType<T> {
   }
 
   storeAction = (action: ActionType<T, unknown>) => {
-    let untypedAction = {...action} as any;
+    let untypedAction = { ...action } as any;
     if (this.dataApi) {
       const actionSyncOptions = this.dataApi.syncOptions?.actions;
       if (actionSyncOptions && actionSyncOptions.sync) {
@@ -105,14 +98,42 @@ export class Store<T> implements StoreType<T> {
     }
   };
 
-  storeState = (state: T) => {
-    let untypedState = {...state} as any;
+  handleActionCallbacks = (action: ActionType<T, unknown>, oldState: T, newState: T) => {
+    try {
+      const clonedAction = JSON.parse(JSON.stringify(action)) as ActionType<
+        T,
+        unknown
+      >;
+      for (const callback of this.callbacks) {
+        callback(clonedAction, oldState, newState, this.storeContext);
+      }
+    } catch {
+      try {
+        for (const callback of this.callbacks) {
+          callback(
+            { type: action.type } as ActionType<T, unknown>,
+            oldState,
+            newState,
+            this.storeContext
+          );
+        }
+      } catch {
+        //ignore
+      }
+    }
+  }
+
+  storeState = async (state: T) => {
+    let untypedState = { ...state } as any;
     if (this.dataApi) {
       const stateSyncOptions = this.dataApi.syncOptions?.state;
       if (stateSyncOptions && stateSyncOptions.sync) {
         const currentUserId = this.dataApi.getUserId();
         if (!untypedState['lastModified']) {
-          untypedState = { ...untypedState, lastModified: new Date().getTime() };
+          untypedState = {
+            ...untypedState,
+            lastModified: new Date().getTime(),
+          };
         }
         if (stateSyncOptions.addUserId && !untypedState['createdBy']) {
           untypedState = { ...untypedState, createdBy: currentUserId };
@@ -122,8 +143,10 @@ export class Store<T> implements StoreType<T> {
             delete untypedState[excludedField];
           }
         }
-        this.dataApi.setState(untypedState);
+        await this.dataApi.setState(untypedState);
       }
     }
   };
+
+
 }
