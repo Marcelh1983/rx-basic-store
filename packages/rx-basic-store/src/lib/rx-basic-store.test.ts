@@ -52,7 +52,7 @@ class LoadAction<T extends StateModel> implements ActionType<T, never> {
   }
 }
 class LoadButDontStoreAction<T extends StateModel> implements ActionType<T, never> {
-  storeAction = false;
+  neverStoreOrLog = true;
   type = 'LOAD';
   async execute(ctx: StateContextType<T>): Promise<T> {
     const currentState = ctx.getState();
