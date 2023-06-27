@@ -5,16 +5,17 @@ import {
   getFirestore,
   doc,
   getDoc,
-  setDoc,
   Firestore,
-  DocumentReference,
 } from '@firebase/firestore';
+import { SetDocQueue } from './queue';
 
 export class FirebaseApi<T> implements DataApi<T> {
   private app!: FirebaseApp;
   public auth!: Auth;
   public firestore!: Firestore;
   
+  private setDocQueue = new SetDocQueue(1000);
+
   constructor(
     public syncOptions: StoreSyncOptions,
     public firebaseOptions: FirebaseOptions
@@ -37,24 +38,24 @@ export class FirebaseApi<T> implements DataApi<T> {
     if (!doc.exists()) {
       return null;
     } else {
-      const state = doc.data();
+      const state = doc.data() as T;
       return state;
     }
   };
 
   setState = async (document: T) => {
     const stateRef = this.getStateRef();
-    return await setDoc<T>(stateRef, document);
+    this.setDocQueue.enqueue(stateRef, document);
   };
 
   storeAction = async (action: unknown) => {
     const collectionName =
       this.syncOptions?.actions?.collectionName || 'actions';
-    const actionRef = await doc(
+    const actionRef = doc(
       this.firestore,
       `${collectionName}/${dateId()}`
     );
-    return setDoc(actionRef, action);
+    this.setDocQueue.enqueue(actionRef, action);
   };
 
   getStateRef = () => {
@@ -63,7 +64,7 @@ export class FirebaseApi<T> implements DataApi<T> {
     const stateDoc = doc(
       this.firestore,
       `${collectionName}/${userId}`
-    ) as DocumentReference<T>;
+    );
     return stateDoc;
   };
 }

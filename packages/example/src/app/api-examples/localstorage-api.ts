@@ -1,15 +1,10 @@
 import { DataApi, StoreSyncOptions } from 'rx-basic-store';
-import { FirebaseOptions, FirebaseApp, initializeApp } from '@firebase/app';
 
-export class FirebaseApi<T> implements DataApi<T> {
-  private app!: FirebaseApp;
+export class LocalStorageApi<T> implements DataApi<T> {
 
   constructor(
-    public syncOptions: StoreSyncOptions,
-    public firebaseOptions: FirebaseOptions
-  ) {
-    this.app = initializeApp(this.firebaseOptions);
-  }
+    public syncOptions: StoreSyncOptions
+  ) { }
 
   getUserId = () => 'default_user';
 
@@ -23,15 +18,15 @@ export class FirebaseApi<T> implements DataApi<T> {
     return Promise.resolve(state);
   };
 
-  storeAction = async (action: any) => {
+  storeAction = async (action: unknown) => {
     const collectionName =
       this.syncOptions?.actions?.collectionName || 'actions';
       const userId = this.getUserId();
-      let actions:any[] = []
+      let actions:unknown[] = []
       try {
        const rawActions = localStorage.getItem(`${collectionName}_${userId}`);
        if (rawActions) {
-         actions = JSON.parse(rawActions) as any[];
+         actions = JSON.parse(rawActions) as unknown[];
        }
       } catch {
         // ignore
