@@ -1,7 +1,7 @@
+import { expect, jest, describe, it } from '@jest/globals';
 import { DataApi } from './data-api';
 import { Store } from './store';
 import { ActionType, StateContextType, StoreSyncOptions } from './types';
-
 interface StateModel {
   loading: boolean;
   users: string[];
@@ -51,7 +51,9 @@ class LoadAction<T extends StateModel> implements ActionType<T, never> {
     return currentState;
   }
 }
-class LoadButDontStoreAction<T extends StateModel> implements ActionType<T, never> {
+class LoadButDontStoreAction<T extends StateModel>
+  implements ActionType<T, never>
+{
   neverStoreOrLog = true;
   type = 'LOAD';
   async execute(ctx: StateContextType<T>): Promise<T> {
@@ -263,7 +265,7 @@ describe(`rx-basic-store`, () => {
     const store = new Store<StateModel>(initialState, false, dataApi);
     await store.dispatch(new LoadAction());
     expect((dataApi.latestState as any)['loading']).toBeUndefined();
-    expect((dataApi.latestState.users.length)).toEqual(2);
+    expect(dataApi.latestState.users.length).toEqual(2);
   });
 
   it('data api excluded field must only be excluded in dataApi not in actual state', async () => {
@@ -293,7 +295,7 @@ describe(`rx-basic-store`, () => {
       initialState
     );
     const store = new Store<StateModel>(initialState, false, dataApi);
-    await store.dispatch(new SomeAction({ included: 'yup', excluded: 'yup '}));
+    await store.dispatch(new SomeAction({ included: 'yup', excluded: 'yup ' }));
     expect((dataApi.actions[0].payload as any)['excluded']).toBeUndefined();
     expect((dataApi.actions[0].payload as any)['included']).toEqual('yup');
   });
