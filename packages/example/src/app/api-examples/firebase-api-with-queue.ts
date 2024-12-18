@@ -1,19 +1,14 @@
 import { DataApi, StoreSyncOptions } from 'rx-basic-store';
 import { FirebaseOptions, FirebaseApp, initializeApp } from '@firebase/app';
-import { getAuth, Auth } from '@firebase/auth';
-import {
-  getFirestore,
-  doc,
-  getDoc,
-  Firestore,
-} from '@firebase/firestore';
+import { getAuth, Auth } from 'firebase/auth';
+import { getFirestore, doc, getDoc, Firestore } from '@firebase/firestore';
 import { SetDocQueue } from './queue';
 
 export class FirebaseApi<T> implements DataApi<T> {
   private app!: FirebaseApp;
   public auth!: Auth;
   public firestore!: Firestore;
-  
+
   private setDocQueue = new SetDocQueue(1000);
 
   constructor(
@@ -51,20 +46,14 @@ export class FirebaseApi<T> implements DataApi<T> {
   storeAction = async (action: unknown) => {
     const collectionName =
       this.syncOptions?.actions?.collectionName || 'actions';
-    const actionRef = doc(
-      this.firestore,
-      `${collectionName}/${dateId()}`
-    );
+    const actionRef = doc(this.firestore, `${collectionName}/${dateId()}`);
     this.setDocQueue.enqueue(actionRef, action);
   };
 
   getStateRef = () => {
     const collectionName = this.syncOptions?.state?.collectionName || 'state';
     const userId = this.getUserId();
-    const stateDoc = doc(
-      this.firestore,
-      `${collectionName}/${userId}`
-    );
+    const stateDoc = doc(this.firestore, `${collectionName}/${userId}`);
     return stateDoc;
   };
 }

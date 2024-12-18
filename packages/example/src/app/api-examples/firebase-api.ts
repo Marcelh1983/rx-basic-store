@@ -1,6 +1,6 @@
 import { DataApi, StoreSyncOptions } from 'rx-basic-store';
 import { FirebaseOptions, FirebaseApp, initializeApp } from '@firebase/app';
-import { getAuth, Auth } from '@firebase/auth';
+import { Auth, getAuth } from 'firebase/auth';
 import {
   getFirestore,
   doc,
@@ -8,13 +8,14 @@ import {
   setDoc,
   Firestore,
   DocumentReference,
+  DocumentData,
 } from '@firebase/firestore';
 
 export class FirebaseApi<T> implements DataApi<T> {
   private app!: FirebaseApp;
   public auth!: Auth;
   public firestore!: Firestore;
-  
+
   constructor(
     public syncOptions: StoreSyncOptions,
     public firebaseOptions: FirebaseOptions
@@ -44,7 +45,7 @@ export class FirebaseApi<T> implements DataApi<T> {
 
   setState = async (document: T) => {
     const stateRef = this.getStateRef();
-    return await setDoc<T>(stateRef, document);
+    return await setDoc<T, DocumentData>(stateRef, document);
   };
 
   storeAction = async (action: unknown) => {

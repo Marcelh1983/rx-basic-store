@@ -3,7 +3,7 @@ import { Store } from 'rx-basic-store';
 import { ClearFilterAction, FilterAction, LoadAction, initialState, StateModel } from './store';
 
 export function App() {
-  const store = useRef<Store<StateModel>>();
+  const store = useRef<Store<StateModel>>(null);
   const [state, setState] = useState(initialState);
 
   useEffect(() => {
@@ -73,9 +73,9 @@ export function App() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {state.users.filter(state.filter).length === 0 ?? (
+                  {state.users.filter(state.filter).length === 0 ? (
                     <div>No results</div>
-                  )}
+                  ) : null}
                   {state.users.filter(state.filter).map((user) => (
                     <tr key={user.email}>
                       <td className="px-6 py-4 whitespace-nowrap">

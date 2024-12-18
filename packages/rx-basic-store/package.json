@@ -1,27 +1,26 @@
 {
-    "name": "rx-basic-store",
-    "version": "2.0.65",
-    "license": "MIT",
-    "author": {
-      "name": "Marcel Hoekstra"
-    },
-    "repository": {
-      "type": "git",
-      "url": "git+https://github.com/Marcelh1983/rx-basic-store.git"
-    },
-    "keywords": [
-      "Store",
-      "RxJs",
-      "React"
-    ],
-    "main": "index.js",
-    "types": "libs/rx-basic-store/src/index.d.ts",
-    "bugs": {
-      "url": "https://github.com/Marcelh1983/rx-basic-store/issues"
-    },
-    "homepage": "https://github.com/Marcelh1983/rx-basic-store",
-    "peerDependencies": {
-      "rxjs": ">= 6.0.0"
-    }
+  "name": "rx-basic-store",
+  "version": "2.0.65",
+  "license": "MIT",
+  "author": {
+    "name": "Marcel Hoekstra"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Marcelh1983/rx-basic-store.git"
+  },
+  "keywords": [
+    "Store",
+    "RxJs",
+    "React"
+  ],
+  "main": "index.js",
+  "types": "libs/rx-basic-store/src/index.d.ts",
+  "bugs": {
+    "url": "https://github.com/Marcelh1983/rx-basic-store/issues"
+  },
+  "homepage": "https://github.com/Marcelh1983/rx-basic-store",
+  "peerDependencies": {
+    "rxjs": ">= 6.0.0"
   }
-  
+}

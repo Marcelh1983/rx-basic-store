@@ -1,10 +1,11 @@
 {
+  "name": "rx-basic-store",
   "$schema": "..\\..\\node_modules\\nx\\schemas\\project-schema.json",
   "sourceRoot": "packages/rx-basic-store/src",
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nrwl/web:rollup",
+      "executor": "@nx/rollup:rollup",
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/packages/rx-basic-store",
@@ -12,7 +13,7 @@
         "project": "packages/rx-basic-store/package.json",
         "entryFile": "packages/rx-basic-store/src/index.ts",
         "external": [],
-        "rollupConfig": "@nrwl/react/plugins/bundle-rollup",
+        "rollupConfig": "@nx/react/plugins/bundle-rollup",
         "compiler": "babel",
         "assets": [
           {
@@ -20,22 +21,19 @@
             "input": ".",
             "output": "."
           }
-        ]
+        ],
+        "babelUpwardRootMode": true
       }
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "lintFilePatterns": ["packages/rx-basic-store/**/*.ts"]
-      }
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/packages/rx-basic-store"],
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/packages/rx-basic-store"],
       "options": {
-        "jestConfig": "packages/rx-basic-store/jest.config.ts",
-        "passWithNoTests": true
+        "jestConfig": "packages/rx-basic-store/jest.config.ts"
       }
     }
   },
