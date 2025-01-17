@@ -23,13 +23,13 @@ export class Store<T> implements StoreType<T> {
     context?: Map<string, unknown>
   ) {
     this.subject = new BehaviorSubject<T>(initialState);
+    this.storeContext = context || new Map<string, unknown>();
     this.ctx = new StateContext<T>(
       this.subject,
       this.storeContext,
       initialState,
       dataApi
     );
-    this.storeContext = context || new Map<string, unknown>();
   }
 
   public subscribe = (setState: (state: T) => void) =>
