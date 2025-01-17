@@ -19,7 +19,8 @@ export class Store<T> implements StoreType<T> {
   constructor(
     initialState: T,
     private devTools = false,
-    private dataApi?: DataApi<T>
+    private dataApi?: DataApi<T>,
+    context?: Map<string, unknown>
   ) {
     this.subject = new BehaviorSubject<T>(initialState);
     this.ctx = new StateContext<T>(
@@ -28,7 +29,7 @@ export class Store<T> implements StoreType<T> {
       initialState,
       dataApi
     );
-  
+    this.storeContext = context || new Map<string, unknown>();
   }
 
   public subscribe = (setState: (state: T) => void) =>
@@ -47,7 +48,7 @@ export class Store<T> implements StoreType<T> {
         this.devToolsDispacher(action, newState);
       }
     }
-    
+
     if (this.callbacks?.length > 0) {
       this.handleActionCallbacks(action, oldState, newState);
     }
@@ -98,7 +99,11 @@ export class Store<T> implements StoreType<T> {
     }
   };
 
-  handleActionCallbacks = (action: ActionType<T, unknown>, oldState: T, newState: T) => {
+  handleActionCallbacks = (
+    action: ActionType<T, unknown>,
+    oldState: T,
+    newState: T
+  ) => {
     try {
       const clonedAction = JSON.parse(JSON.stringify(action)) as ActionType<
         T,
@@ -121,7 +126,7 @@ export class Store<T> implements StoreType<T> {
         //ignore
       }
     }
-  }
+  };
 
   storeState = async (state: T) => {
     let untypedState = { ...state } as any;
@@ -147,6 +152,4 @@ export class Store<T> implements StoreType<T> {
       }
     }
   };
-
-
 }
